@@ -1,7 +1,9 @@
 import express from 'express';
 import 'dotenv/config';
 import cors from 'cors';
-import { initDB } from './db/schema.js';
+// import { initDB } from './db/schema.js';
+import { typeDefs } from './graphql/typedef.js';
+import { resolvers } from './graphql/resolvers.js';
 
 const PORT = process.env.PORT || 8000;
 
@@ -22,26 +24,17 @@ app.use((req, res, next) => {
 
 
 const server = new ApolloServer({
-    typeDefs: `
-        
-        type Query {
-            checkDB: Boolean
-        }
-    `,
-    resolvers: {
-        Query: {
-            checkDB: async () => {
-                await initDB();
-                return true;
-            }
-        }
-    }
+    typeDefs,
+    resolvers
 });
 
 const startServer = async () => {
     await server.start();
 
     app.use('/graphql', expressMiddleware(server));
+    app.get('/', (req, res) => {
+        res.send('server up and running');
+    });
 
     app.listen(PORT, () => {
         console.log(`http://localhost:${PORT}/`)
