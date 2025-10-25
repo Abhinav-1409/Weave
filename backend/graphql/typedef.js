@@ -22,6 +22,7 @@ export const typeDefs =
             salt: String!
             password: String!
             profile: Profile!
+            friend: [Friend!]
         }
         type Profile {
             id: ID!
@@ -30,6 +31,7 @@ export const typeDefs =
             bio: String
             lastSeen: Date
             createdAt: Date!
+            user: User!
         }
         type Conversation {
             id: ID!
@@ -53,6 +55,7 @@ export const typeDefs =
             status: FriendStatus!
             conversationId: Conversation
             createdAt: Date!
+            user: User!
         }
 
 
@@ -65,10 +68,13 @@ export const typeDefs =
 
         type Query {
             getUserDeatils (email: String!) : User!
+            getUserProfile (user_id: ID!) : Profile!
         }
 
         type Mutation {
             signup (name: String!, email: String!, password: String!): AuthResponse!
             login (email: String!, password: String!): AuthResponse!
+            updateProfile (profileImage: String, bio: String, lastSeen: Date, name: String): Profile!
+            updateProfileImage (contentType: String!): String!
         }
 `

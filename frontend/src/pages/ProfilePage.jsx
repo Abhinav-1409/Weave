@@ -6,6 +6,46 @@ import { useNavigate } from "react-router-dom"
 import { ArrowLeft, User, Save, X } from "lucide-react"
 
 const ProfilePage = () => {
+
+  const updatePP = () => {
+    // Browser
+    // const file = input.files[0]; // from <input type="file" />
+    // const contentType = file.type || 'application/octet-stream';
+
+    // // 1) Get presigned URL
+    // const { url } = await fetch('/api/upload-url', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ key: `uploads/${crypto.randomUUID()}-${file.name}`, contentType }),
+    // }).then(r => r.json());
+
+    // // 2) PUT to S3 presigned URL
+    // const putRes = await fetch(url, {
+    //   method: 'PUT',
+    //   headers: { 'Content-Type': contentType },
+    //   body: file,
+    // });
+    // if (!putRes.ok) throw new Error('Upload failed');
+    return 0;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // const { user, logout, updateProfile } = useAuth()
   const navigate = useNavigate()
   const [isEditing, setIsEditing] = useState(false)

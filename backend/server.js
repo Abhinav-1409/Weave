@@ -1,7 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
 import cors from 'cors';
-// import { initDB } from './db/schema.js';
+
 import { typeDefs } from './graphql/typedef.js';
 import { resolvers } from './graphql/resolvers.js';
 
@@ -34,6 +34,10 @@ const startServer = async () => {
     app.use('/graphql', expressMiddleware(server));
     app.get('/', (req, res) => {
         res.send('server up and running');
+    });
+
+    app.get('/url', async (req,res)=>{
+        res.send('await init()');
     });
 
     app.listen(PORT, () => {
