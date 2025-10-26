@@ -1,12 +1,13 @@
 import { handleLogin, handleSignup } from "../controllers/auth.js";
 import { handleGetUserDetails, handleUpdateUserName, handleGetUserFriends } from "../controllers/user.js";
 import { handleUpdateBio, handleGetUserProfile } from '../controllers/profile.js';
-import { getUploadUrl } from '../utlis/s3.js';
+import { getObjectUrl, getUploadUrl } from '../utlis/s3.js';
 import camelcaseKeys from 'camelcase-keys';
 
 export const resolvers = {
     Query: {
-        getUserDeatils: async (_, { email }) => {
+        getUserDeatils: async (_, { email }, context) => {
+            console.log(context, context);
             return camelcaseKeys(await handleGetUserDetails({ email: email, id: null }));
         },
     },
@@ -15,19 +16,13 @@ export const resolvers = {
             return camelcaseKeys(await handleGetUserProfile(parent.id));
         },
         friend: async (parent) => {
-            const result = camelcaseKeys(await handleGetUserFriends(parent.id));
-            const friends = [];
-            for (let res of result) {
-                friends.push({
-                    friendId: res.user1 == parent.id ? res.user2 : res.user1
-                });
-            }
+            const friends = camelcaseKeys(await handleGetUserFriends(parent.id));
             return friends;
         }
     },
     Friend: {
         user: async (parent) => {
-            return camelcaseKeys(await handleGetUserDetails({ id: parent.friendId }));
+            return camelcaseKeys(await handleGetUserDetails({ id: parent.friends }));
         }
     },
     Profile: {
@@ -64,8 +59,8 @@ export const resolvers = {
             return profile;
         },
         updateProfileImage: async (_, { contentType }) => {
-            const uploadUrl = await getUploadUrl('rtyu', contentType);
-            return uploadUrl.url;
+            const uploadUrl = await getObjectUrl('rtyu');
+            return uploadUrl;
         }
     }
 }

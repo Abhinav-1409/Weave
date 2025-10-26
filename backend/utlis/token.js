@@ -8,7 +8,7 @@ export const createToken = (name, id, email) => {
 export const validateToken = (token) => {
     try {
         const payload = jwt.verify(token, process.env.SECRET_KEY);
-        return token;
+        return payload;
     } catch (e) {
         throw new Error('Invalid Token');
     }

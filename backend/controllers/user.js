@@ -54,8 +54,13 @@ export const handleGetUserFriends = async (id) => {
             throw new Error('Credentials Required');
         const result =
             await db`
-                SELECT * FROM friend
-                WHERE user1 = ${id} OR user2 = ${id};
+                SELECT 
+                    CASE
+                        WHEN user1 = ${id} THEN user2
+                        WHEN user2 = ${id} THEN user1
+                    ELSE NULL END
+                    AS friends
+                FROM friend;
             `
         return result;
     } catch (e) {
