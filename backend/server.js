@@ -9,11 +9,11 @@ const PORT = process.env.PORT || 8000;
 
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@as-integrations/express5';
-import { authContext, getContext } from './middlewares/auth.js';
+import { authContext } from './middlewares/auth.js';
 
 const app = express();
 app.use(cors({
-    origin: 'http://localhost:5173/',
+    origin: 'http://localhost:5173',
     credentials: true,
 }));
 
@@ -33,17 +33,11 @@ const startServer = async () => {
     await server.start();
 
     app.use('/graphql', expressMiddleware(server, {
-        context: () => {
-            return { user: true }
-        }
+        context: authContext
     }));
-    app.post('/', (req, res) => {
-        console.log(req.headers['authorization']);
-        res.send('server up and running');
-    });
 
-    app.get('/url', async (req, res) => {
-        res.send('await init()');
+    app.get('/', (req, res) => {
+        res.send('server up and running');
     });
 
     app.listen(PORT, () => {

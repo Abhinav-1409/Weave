@@ -1,21 +1,21 @@
-"use client"
-
-import { useState } from "react"
-// import { useNavigate } from "react-router-dom"
-// import { useAuth } from "../context/AuthContext"
-import { Mail, Lock, User, FileText } from "lucide-react"
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Mail, Lock, User, FileText } from "lucide-react";
+import { useAuth } from "../context/authContex.jsx";
+import { toast } from "react-toastify";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true)
+  const { login, signup } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     bio: "",
-  })
-  const [error, setError] = useState("")
-  // const { login, signup } = useAuth()
-  // const navigate = useNavigate()
+  });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -23,32 +23,44 @@ const AuthPage = () => {
     setError("")
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    setLoading(true);
     e.preventDefault()
-    setError("")
+    setError("");
 
-    // if (isLogin) {
-    //   if (!formData.email || !formData.password) {
-    //     setError("Please fill in all fields")
-    //     return
-    //   }
-    //   if (login(formData.email, formData.password)) {
-    //     navigate("/")
-    //   } else {
-    //     setError("Invalid email or password")
-    //   }
-    // } else {
-    //   if (!formData.name || !formData.email || !formData.password) {
-    //     setError("Please fill in all fields")
-    //     return
-    //   }
-    //   if (formData.password.length < 6) {
-    //     setError("Password must be at least 6 characters")
-    //     return
-    //   }
-    //   signup(formData)
-    //   navigate("/")
-    // }
+    if (isLogin) {
+      if (!formData.email || !formData.password) {
+        toast.warning("Please fill in all fields");
+        return;
+      }
+
+      const res = await login(formData.email, formData.password);
+      console.log(res);
+      if (res.success) {
+        navigate("/");
+      } else {
+        setError(res.message);
+      }
+    }
+    else {
+      if (!formData.name || !formData.email || !formData.password) {
+        toast.warning("Please fill in all fields")
+        return;
+      }
+      if (formData.password.length < 6) {
+        toast.warning("Password must be at least 6 characters")
+        return;
+      }
+      const res = await signup(formData.name, formData.email, formData.password);
+      console.log(res);
+      if (res.success) {
+        toast.success('Login To Continue');
+        setIsLogin(true);
+      } else {
+        setError(res.message);
+      }
+      setLoading(false);
+    }
   }
 
   const toggleMode = () => {
@@ -72,24 +84,22 @@ const AuthPage = () => {
           <div className="flex gap-2 mb-8 bg-slate-100 p-1 rounded-lg">
             <button
               onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
-                isLogin ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${isLogin ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Login
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
-                !isLogin ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${!isLogin ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Sign Up
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             {/* Name Field (Signup only) */}
             {!isLogin && (
               <div>
@@ -165,12 +175,13 @@ const AuthPage = () => {
 
             {/* Submit Button */}
             <button
-              type="submit"
+              onClick={handleSubmit}
+              disabled={loading}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors mt-6"
             >
-              {isLogin ? "Login" : "Sign Up"}
+              {isLogin ? loading ? "Loading..." : "Login" : loading ? "Loading..." : "Sign up"}
             </button>
-          </form>
+          </div>
         </div>
 
         {/* Footer */}

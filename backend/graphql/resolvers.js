@@ -7,7 +7,6 @@ import camelcaseKeys from 'camelcase-keys';
 export const resolvers = {
     Query: {
         getUserDeatils: async (_, { email }, context) => {
-            console.log(context, context);
             return camelcaseKeys(await handleGetUserDetails({ email: email, id: null }));
         },
     },
@@ -32,6 +31,7 @@ export const resolvers = {
     },
     Mutation: {
         login: async (_, { email, password }) => {
+            console.log("login", email, password);
             try {
                 const result = await handleLogin(email, password);
                 return { success: true, token: result.token, user: result.user, message: "Login Successful" };

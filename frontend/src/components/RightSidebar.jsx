@@ -61,12 +61,25 @@
 
 import { useEffect, useState } from "react"
 import { User, LogOut, Mail, Phone } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../context/authContex"
+import { toast } from "react-toastify"
 
 const RightSidebar = ({ selectedUser }) => {
+  const { logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [images, setImages] = useState([])
   const handleLogout = () => {
-    console.log("logout")
+    logout();
+    // toast.success('Logout successfull');
+    navigate('/auth');
   }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error('Login to Continue.');
+      navigate('/auth');
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     setImages([
