@@ -1,14 +1,26 @@
 import { handleLogin, handleSignup } from "../controllers/auth.js";
-import { handleGetUserDetails, handleUpdateUserName, handleGetUserFriends } from "../controllers/user.js";
+import { handleGetUserDetails, handleUpdateUserName, handleGetUserFriends, handleGetUsers } from "../controllers/user.js";
 import { handleUpdateBio, handleGetUserProfile } from '../controllers/profile.js';
 import { getObjectUrl, getUploadUrl } from '../utlis/s3.js';
 import camelcaseKeys from 'camelcase-keys';
+import { GraphQLError } from 'graphql';
 
 export const resolvers = {
     Query: {
         getUserDeatils: async (_, { email }, context) => {
             return camelcaseKeys(await handleGetUserDetails({ email: email, id: null }));
         },
+        getAllUsers: async (_, args, context) => {
+            console.log(context);
+            if (!context.authenticated) {
+                throw new GraphQLError('You are not authorized to perform this action.', {
+                    extensions: {
+                        code: 'FORBIDDEN',
+                    },
+                });
+            }
+            return camelcaseKeys(await handleGetUsers());
+        }
     },
     User: {
         profile: async (parent) => {
@@ -31,7 +43,6 @@ export const resolvers = {
     },
     Mutation: {
         login: async (_, { email, password }) => {
-            console.log("login", email, password);
             try {
                 const result = await handleLogin(email, password);
                 return { success: true, token: result.token, user: result.user, message: "Login Successful" };

@@ -69,6 +69,7 @@ export const typeDefs =
         type Query {
             getUserDeatils (email: String!) : User!
             getUserProfile (user_id: ID!) : Profile!
+            getAllUsers: [User!]
         }
 
         type Mutation {

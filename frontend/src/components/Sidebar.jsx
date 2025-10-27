@@ -1,80 +1,30 @@
-// import React, { useState, useEffect } from "react";
-// import { useNavigate } from 'react-router-dom'
-// import { Search, User } from 'lucide-react';
-
-// const Sidebar = ({ selectedUser, setSelectedUser }) => {
-//     const [userData, setUserData] = useState([]);
-//     useEffect(() => {
-//         setUserData([{
-//             'profileImage': null, 'name': "Abhinav", 'activeStatus': 'online', '_id': 1,
-//         }, {
-//             'profileImage': null, 'name': "Abhinav", 'activeStatus': 'offline', '_id': 2,
-//         }])
-//     }, []);
-
-//     const navigate = useNavigate();
-//     return (
-//         <div className={`bg-slate-200/60 h-full p-5 rounded-r-xl overflow-y-scroll scrollbar-hide text-slate-800 ${selectedUser ? "max-md:hidden" : ""}`}>
-//             <div className="pb-5">
-//                 <div className="flex justify-between items-center">
-//                     <img src='https://www.shutterstock.com/shutterstock/photos/2156873317/display_1500/stock-vector-w-logo-vector-graphic-branding-letter-element-black-background-2156873317.jpg' alt="logo" className="max-w-10 cursor-pointer" />
-//                     <div className="absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-700 text-gray-900 hidden group-hover:block">
-//                         <button onClick={() => navigate('/profile')} className="cursor-pointer text-sm">Edit Profile</button>
-//                         <hr className="my02 border-t border-gray-500" />
-//                         <button onClick={() => navigate('/profile')} className="cursor-pointer text-sm">LogOut</button>
-//                     </div>
-//                 </div>
-//                 <div className="bg-white rounded-full flex items-center gap-2 py-3 px-4 mt-5">
-//                     <Search />
-//                     <input type="text" className="bg-transparent border-none outline-none text-slate-700 text-xs placeholder-[#6b7280] flex-1" placeholder="Search user..." />
-//                 </div>
-//             </div>
-
-//             <div className="flex flex-col"> 
-//                 {userData.map((user, index) => (
-//                     <div onClick={() => { setSelectedUser(user) }} key={index} className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${selectedUser?._id === user._id && 'bg-[#282142]/50'}`}>
-//                         {user?.profileImage ? <img src={user?.profileImage} className="w-[35px] aspect-[1/1] rounded-full" /> : <User />}
-//                         <div>
-//                             <p>{user.name}</p>
-//                             {user?.activeStatus === 'online' && <span className="text-green-400 text-xs">Online</span>}
-//                             {user?.activeStatus === 'offline' && <span className="text-red-400 text-xs">Offline</span>}
-//                         </div>
-//                     </div>
-//                 ))}
-//             </div>
-
-//         </div>
-//     )
-// }
-
-// export default Sidebar;
-
 "use client"
 
 import { useState, useEffect } from "react"
 // import { useNavigate } from "react-router-dom"
 import { Search, User, MoreVertical } from "lucide-react"
+import { useLazyQuery } from '@apollo/client/react';
+import { GET_ALL_USERS } from '../graphql/gqlQuery.js';
+import { useAuth } from '../context/AuthContex.jsx';
 
 const Sidebar = ({ selectedUser, setSelectedUser }) => {
-  const [userData, setUserData] = useState([])
+  const [userData, setUserData] = useState([]);
+  const [getAllUsers, { _ }] = useLazyQuery(GET_ALL_USERS);
+  const { token } = useAuth();
   useEffect(() => {
-    setUserData([
-      {
-        profileImage: null,
-        name: "Abhinav",
-        activeStatus: "online",
-        _id: 1,
-      },
-      {
-        profileImage: null,
-        name: "Sarah",
-        activeStatus: "offline",
-        _id: 2,
-      },
-    ])
+    const getUser = async () => {
+      const { data } = await getAllUsers({
+        context: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      });
+      setUserData(data.getAllUsers);
+    }
+    getUser();
   }, [])
 
-//   const navigate = useNavigate();
   return (
     <div
       className={`bg-white border-r border-slate-200 h-full flex flex-col overflow-hidden ${selectedUser ? "max-md:hidden" : ""}`}
@@ -106,7 +56,7 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
               setSelectedUser(user)
             }}
             key={index}
-            className={`flex items-center gap-3 p-3 mx-2 my-1 rounded-lg cursor-pointer transition-all ${selectedUser?._id === user._id ? "bg-indigo-50 border border-indigo-200" : "hover:bg-slate-50"}`}
+            className={`flex items-center gap-3 p-3 mx-2 my-1 rounded-lg cursor-pointer transition-all ${selectedUser?.id === user.id ? "bg-indigo-50 border border-indigo-200" : "hover:bg-slate-50"}`}
           >
             {user?.profileImage ? (
               <img

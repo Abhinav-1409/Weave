@@ -68,3 +68,9 @@ export const handleGetUserFriends = async (id) => {
         throw new Error('Some Error Occurred.');
     }
 }
+
+export const handleGetUsers = async () => {
+    const result =
+        await db`SELECT * FROM users`;
+    return result;
+}
