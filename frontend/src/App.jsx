@@ -4,7 +4,8 @@ import { Routes, Route } from "react-router-dom";
 import { ApolloProvider } from '@apollo/client/react';
 import { client } from './graphql/gqlClient.js';
 
-import { AuthProvider } from "./context/authContex.jsx";
+import { AuthProvider } from "./context/authContext.jsx";
+import { ChatProvider } from "./context/ChatContext.jsx";
 import { ToastContainer, Slide } from 'react-toastify';
 
 import HomePage from "./pages/HomePage"
@@ -30,11 +31,13 @@ function App() {
         transition={Slide}
       />
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-        </Routes>
+        <ChatProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Routes>
+        </ChatProvider>
       </AuthProvider>
     </ApolloProvider>
   )

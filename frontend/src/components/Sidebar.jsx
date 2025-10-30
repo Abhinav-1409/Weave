@@ -4,26 +4,22 @@ import { useState, useEffect } from "react"
 // import { useNavigate } from "react-router-dom"
 import { Search, User, MoreVertical } from "lucide-react"
 import { useLazyQuery } from '@apollo/client/react';
-import { GET_ALL_USERS } from '../graphql/gqlQuery.js';
-import { useAuth } from '../context/AuthContex.jsx';
+import { GET_USERS } from '../graphql/gqlQuery.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useChat } from "../context/ChatContext.jsx";
 
-const Sidebar = ({ selectedUser, setSelectedUser }) => {
-  const [userData, setUserData] = useState([]);
-  const [getAllUsers, { _ }] = useLazyQuery(GET_ALL_USERS);
-  const { token } = useAuth();
+const Sidebar = () => {
+  const { selectedUser, setSelectedUser, users, getUsers, unseenMessages, setUnseenMessages } = useChat();
+  const [input, setInput] = useState(false);
+  const filteredUsers = input ? users.filter((user) => {
+    user.name.toLowerCase().includes(input.toLowerCase())
+  }) : users;
+  const [getAllUsers, { _ }] = useLazyQuery(GET_USERS);
+  const { token, onlineUsers } = useAuth();
   useEffect(() => {
-    const getUser = async () => {
-      const { data } = await getAllUsers({
-        context: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      });
-      setUserData(data.getAllUsers);
-    }
-    getUser();
-  }, [])
+    getUsers();
+  }, [onlineUsers]);
+
 
   return (
     <div
@@ -41,6 +37,7 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
         <div className="bg-slate-100 rounded-lg flex items-center gap-2 py-2 px-3">
           <Search size={16} className="text-slate-400" />
           <input
+            onChange={(e) => setInput(e.target.value)}
             type="text"
             className="bg-transparent border-none outline-none text-sm text-slate-700 placeholder-slate-400 flex-1"
             placeholder="Search..."
@@ -50,7 +47,7 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
 
       {/* User List */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {userData.map((user, index) => (
+        {filteredUsers.map((user, index) => (
           <div
             onClick={() => {
               setSelectedUser(user)
@@ -71,9 +68,10 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
             )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-900">{user.name}</p>
-              <p className={`text-xs ${user?.activeStatus === "online" ? "text-green-600" : "text-slate-400"}`}>
-                {user?.activeStatus === "online" ? "● Online" : "Offline"}
+              <p className={`text-xs ${onlineUsers.includes(user) ? "text-green-600" : "text-slate-400"}`}>
+                {onlineUsers.includes(user) ? "● Online" : "Offline"}
               </p>
+              {unseenMessages[user.id] > 0 && <p className='absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50'>{unseenMessages[user.id]}</p>}
             </div>
           </div>
         ))}

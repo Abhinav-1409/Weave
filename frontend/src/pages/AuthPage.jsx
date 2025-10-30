@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, FileText } from "lucide-react";
-import { useAuth } from "../context/authContex.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { toast } from "react-toastify";
+import { useEffect } from "react";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true)
@@ -22,6 +23,12 @@ const AuthPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }))
     setError("")
   }
+  const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated]);
 
   const handleSubmit = async (e) => {
     setLoading(true);

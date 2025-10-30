@@ -69,8 +69,8 @@ export const handleGetUserFriends = async (id) => {
     }
 }
 
-export const handleGetUsers = async () => {
+export const handleGetUsers = async (userId) => {
     const result =
-        await db`SELECT * FROM users`;
+        await db`SELECT * FROM users WHERE id != ${userId}`;
     return result;
 }

@@ -23,6 +23,8 @@ export const typeDefs =
             password: String!
             profile: Profile!
             friend: [Friend!]
+            message: [Message!]
+            unseenMessages: [Message!]
         }
         type Profile {
             id: ID!
@@ -41,8 +43,8 @@ export const typeDefs =
         }
         type Message {
             id: ID!
-            sender: User!
-            receiver: User!
+            sender: ID!
+            receiver: ID!
             conversationId: Conversation!
             body: String
             media: String
@@ -69,7 +71,10 @@ export const typeDefs =
         type Query {
             getUserDeatils (email: String!) : User!
             getUserProfile (user_id: ID!) : Profile!
-            getAllUsers: [User!]
+            getUsers: [User!]
+            
+            getMessagesForUser (userId: ID!): [Message!]
+            
         }
 
         type Mutation {
@@ -77,5 +82,7 @@ export const typeDefs =
             login (email: String!, password: String!): AuthResponse!
             updateProfile (profileImage: String, bio: String, lastSeen: Date, name: String): Profile!
             updateProfileImage (contentType: String!): String!
+            
+            sendMessage(receiver: ID!, text: String, media: String): Message!
         }
 `
