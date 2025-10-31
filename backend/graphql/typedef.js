@@ -2,17 +2,10 @@ export const typeDefs =
     `
         scalar Date
 
-        enum FriendStatus {
-            REQUESTED
-            FRIEND
-        }
-        enum ConversationType {
-            DM
-            GROUP
-        }
         enum MessageStatus {
             UNDELIVERED
             DELIVERED
+            SEEN
         }
 
         type User {
@@ -22,44 +15,29 @@ export const typeDefs =
             salt: String!
             password: String!
             profile: Profile!
-            friend: [Friend!]
             message: [Message!]
             unseenMessages: [Message!]
         }
+
         type Profile {
-            id: ID!
-            userId: User!
+            userId: ID!
             profileImage: String
             bio: String
             lastSeen: Date
             createdAt: Date!
             user: User!
         }
-        type Conversation {
-            id: ID!
-            type: ConversationType
-            messages: [Message!]!
-            createdAt: Date! 
-        }
+
         type Message {
             id: ID!
-            sender: ID!
-            receiver: ID!
-            conversationId: Conversation!
-            body: String
-            media: String
+            senderId: ID!
+            receiverId: ID!
+            text: String
+            image: String
             status: MessageStatus!
             createdAt: Date!
+            count: Int
         }
-        type Friend {
-            user1: User!
-            user2: User!
-            status: FriendStatus!
-            conversationId: Conversation
-            createdAt: Date!
-            user: User!
-        }
-
 
         type AuthResponse {
             success: Boolean!
@@ -69,20 +47,16 @@ export const typeDefs =
         }
 
         type Query {
-            getUserDeatils (email: String!) : User!
-            getUserProfile (user_id: ID!) : Profile!
+            getUserDeatils (id: ID!) : User!
             getUsers: [User!]
-            
             getMessagesForUser (userId: ID!): [Message!]
-            
         }
 
         type Mutation {
             signup (name: String!, email: String!, password: String!): AuthResponse!
             login (email: String!, password: String!): AuthResponse!
             updateProfile (profileImage: String, bio: String, lastSeen: Date, name: String): Profile!
-            updateProfileImage (contentType: String!): String!
-            
-            sendMessage(receiver: ID!, text: String, media: String): Message!
+            getUploadUrl (contentType: String!, path: String!): String!
+            sendMessages(receiverId: ID!, text: String, image: String): Message!
         }
 `

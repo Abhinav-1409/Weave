@@ -10,7 +10,7 @@ const s3Client = new S3Client({
 
 const bucketName = `weave-chatapp`;
 
-export const getObjectUrl = async (key) => {
+export const getObjectUrl = async (key, path) => {
     const command = new GetObjectCommand({
         Bucket: bucketName,
         Key: key
@@ -19,14 +19,15 @@ export const getObjectUrl = async (key) => {
     return url;
 };
 
-export const getUploadUrl = async (filename, contentType) => {
+export const getUploadUrl = async (path, filename, contentType) => {
+    const key = `${path}/${filename}`;
     const command = new PutObjectCommand({
         Bucket: bucketName,
-        Key: `profileImages/${filename}`,
+        Key: key,
         ContentType: contentType
     });
     const url = await getSignedUrl(s3Client, command);
-    return { url, contentType };
+    return { url, key };
 };
 
 export const deleteObject = async (filename) => {

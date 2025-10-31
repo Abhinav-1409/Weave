@@ -1,7 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
 import cors from 'cors';
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 
 import { createServer } from "http";
 
@@ -14,21 +14,14 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@as-integrations/express5';
 import { authContext } from './middlewares/auth.js';
 
+import { initDB } from './db/schema.js';
+
 const app = express();
 const httpServer = createServer(app);
 app.use(cors({
     origin: 'http://localhost:5173',
     credentials: true,
 }));
-
-
-
-
-
-
-
-
-
 
 export const io = new Server(httpServer, {
     cors: { origin: "*" }
@@ -51,21 +44,7 @@ io.on("connection", (socket) => {
     });
 });
 
-
-
-
-
-
-
-
-
-
 app.use(express.json());
-app.use((req, res, next) => {
-    console.log(`${req.method} at ${req.path}`);
-    next();
-});
-
 
 const server = new ApolloServer({
     typeDefs,
@@ -83,10 +62,12 @@ const startServer = async () => {
         res.send('server up and running');
     });
 
-    // app.listen(PORT, () => {
-    //     console.log(`http://localhost:${PORT}/`)
-    // });
-     httpServer.listen(PORT, () => {
+    app.get('/init', async (req, res) => {
+        await initDB();
+        res.send("done");
+    });
+
+    httpServer.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}/`);
         console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
         console.log(`Socket.IO ready on ws://localhost:${PORT}`);

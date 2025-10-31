@@ -49,7 +49,7 @@ export const handleSignup = async (name, email, password) => {
         `
         const res = await db`SELECT id FROM users where email = ${email} LIMIT 1`;
         await db`INSERT INTO profile(user_id) VALUES (${res[0].id})`;
-        return true;
+        return { success: true };
     } catch (e) {
         console.log(e);
         throw e;

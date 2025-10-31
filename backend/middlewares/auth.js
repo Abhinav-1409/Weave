@@ -8,10 +8,10 @@ export const authContext = ({ req, res, next }) => {
     try {
         const payload = validateToken(token);
         req.payload = payload;
-        return { authenticated: true, user: payload };
+        return { isAuthenticated: true, user: payload };
     }
     catch (e) {
         console.log(e);
-        return { authenticated: false, message: e.message };
+        return { isAuthenticated: false, error: e.message };
     }
 }

@@ -9,50 +9,50 @@ import { userSocketMap } from "../server.js";
 
 export const resolvers = {
     Query: {
-        getUserDeatils: async (_, { email }) => {
-            return camelcaseKeys(await handleGetUserDetails({ email: email, id: null }));
+        getUserDeatils: async (_, { id }) => {
+            if (!context.isAuthenticated) {
+                throw new GraphQLError('You are not authorized to perform this action.', {
+                    extensions: {
+                        code: 'FORBIDDEN',
+                    },
+                });
+            }
+            return camelcaseKeys(await handleGetUserDetails({ email: null, id: id }), { deep: true });
         },
         getUsers: async (_, args, context) => {
-            if (!context.authenticated) {
+            if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
                         code: 'FORBIDDEN',
                     },
                 });
             }
-            return camelcaseKeys(await handleGetUsers(context.user.id));
+            return camelcaseKeys(await handleGetUsers(context.user.id), { deep: true });
         },
         getMessagesForUser: async (_, { userId }, context) => {
-            if (!context.authenticated) {
+            if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
                         code: 'FORBIDDEN',
                     },
                 });
             }
-            return camelcaseKeys(await getMessagesForUser(userId, context.user.id));
+            const result = await getMessagesForUser(userId, context.user.id);
+            return camelcaseKeys(result.data, { deep: true });
         }
     },
     User: {
         profile: async (parent) => {
-            return camelcaseKeys(await handleGetUserProfile(parent.id));
-        },
-        friend: async (parent) => {
-            const friends = camelcaseKeys(await handleGetUserFriends(parent.id));
-            return friends;
+            return camelcaseKeys(await handleGetUserProfile(parent.id), { deep: true });
         },
         unseenMessages: async (parent, { }, context) => {
-            return camelcaseKeys((await getUndeliveredMessages(context.user.id)).data);
-        }
-    },
-    Friend: {
-        user: async (parent) => {
-            return camelcaseKeys(await handleGetUserDetails({ id: parent.friends }));
+            const result = camelcaseKeys((await getUndeliveredMessages(parent.id, context.user.id), { deep: true }));
+            return result.data;
         }
     },
     Profile: {
         user: async (parent) => {
-            return camelcaseKeys(await handleGetUserDetails({ id: parent.userId }));
+            return camelcaseKeys(await handleGetUserDetails({ id: parent.userId }), { deep: true });
         }
     },
     Mutation: {
@@ -61,7 +61,7 @@ export const resolvers = {
                 const result = await handleLogin(email, password);
                 return { success: true, token: result.token, user: result.user, message: "Login Successful" };
             } catch (e) {
-                return { success: false, message: e.message };
+                return { success: false, error: e.message };
             }
         },
         signup: async (_, { name, email, password }) => {
@@ -70,25 +70,40 @@ export const resolvers = {
                 return { success: true, message: "Account Created Successfully." };
             } catch (e) {
                 console.log(e);
-                return { success: false, message: e.message };
+                return { success: false, error: e.message };
             }
         },
-        updateProfile: async (_, { bio, name }) => {
+        updateProfile: async (_, { bio, name }, context) => {
+            if (!context.isAuthenticated) {
+                throw new GraphQLError('You are not authorized to perform this action.', {
+                    extensions: {
+                        code: 'FORBIDDEN',
+                    },
+                });
+            }
             if (name) {
-                handleUpdateUserName(name, '9ac6ff1b-5239-42b5-a869-5c85e7b68bd4');
+                handleUpdateUserName(name, context.user.id);
             }
             if (bio) {
-                handleUpdateBio(bio, '9ac6ff1b-5239-42b5-a869-5c85e7b68bd4');
+                handleUpdateBio(bio, context.user.id);
             }
-            const profile = camelcaseKeys(await handleGetUserProfile("9ac6ff1b-5239-42b5-a869-5c85e7b68bd4"));
+            const profile = camelcaseKeys(await handleGetUserProfile(context.user.id), { deep: true });
             return profile;
         },
-        updateProfileImage: async (_, { contentType }) => {
-            const uploadUrl = await getObjectUrl('rtyu');
-            return uploadUrl;
+        getUploadUrl: async (_, { path, contentType }, context) => {
+            if (!context.isAuthenticated) {
+                throw new GraphQLError("You are not authorized to perform this acction."),
+                {
+                    extensions: {
+                        code: 'FORBIDDEN',
+                    }
+                }
+            }
+            const uploadUrl = await getUploadUrl(path, context.user.id, contentType);
+            return uploadUrl.url;
         },
-        sendMessage: async (_, { sender, text, media }, context) => {
-            if (!context.authenticated) {
+        sendMessages: async (_, { receiverId, text, image }, context) => {
+            if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
                         code: 'FORBIDDEN',
@@ -96,11 +111,10 @@ export const resolvers = {
                 });
             }
             try {
-                const res = await sendMessage(sender, context.user.id, text, media, null, userSocketMap);
-                console.log(res);
-                return res;
+                const res = await sendMessage(context.user.id, receiverId, text, image, userSocketMap);
+                return camelcaseKeys(res.data, { deep: true });
             } catch (e) {
-                throw new GraphQLError('Some error occurred', {
+                throw new GraphQLError(e.message, {
                     extensions: {
                         code: 'ERROR',
                     },

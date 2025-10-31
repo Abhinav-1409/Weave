@@ -1,61 +1,66 @@
 import db from '../db/connectDB.js';
 import { io } from '../server.js';
 
-export const getMessagesForUser = async (sender, receiver) => {
-    if (!sender || !receiver)
+export const getMessagesForUser = async (user1, user2) => {
+    if (!user1 || !user2)
         return { success: false, message: "Users undefined" };
     try {
         const result = await db`
             SELECT * FROM message
-            WHERE (sender = ${sender} AND receiver = ${receiver}) OR (receiver = ${sender} AND sender = ${receiver})
+            WHERE (sender_id = ${user1} AND receiver_id = ${user2}) OR (receiver_id = ${user1} AND sender_id = ${user2})
             ORDER BY created_at DESC
         `;
         return { success: true, data: result };
     }
     catch (e) {
-        return { success: false, message: e.message };
+        return { success: false, error: e.message };
     }
 }
-export const getUndeliveredMessages = async (receiver) => {
-    if (!receiver) return { success: false, message: "Users undefined" };
+export const getUndeliveredMessages = async (senderId, receiverId) => {
+    if (!senderId) return { success: false, message: "Users undefined" };
     try {
         const result = await db`
-      SELECT * FROM message
-      WHERE receiver = ${receiver} AND message_status = 'undelivered'
+      SELECT *,COUNT(*) AS count FROM message
+      WHERE sender_id = ${senderId} AND receiver_id = ${receiverId} AND status = 'undelivered'
+      GROUP BY message.id
       ORDER BY created_at DESC
     `;
         return { success: true, data: result };
     } catch (e) {
-        return { success: false, message: e.message };
+        console.log(e);
+        return { success: false, error: e.message };
     }
 };
 
-export const sendMessage = async (sender, receiver, text, media, conversationId, userSocketMap) => {
-    if (!sender || !receiver) return { success: false, message: "Users undefined" };
+export const sendMessage = async (senderId, receiverId, text, image, userSocketMap) => {
+    console.log(senderId, receiverId, text, image, userSocketMap);
+    if (!senderId || !receiverId) return { success: false, message: "Users undefined" };
 
     try {
         const [inserted] = await db`
-      INSERT INTO message (sender, receiver, body, media, conversation_id, message_status)
-      VALUES (${sender}, ${receiver}, ${text}, ${media}, ${conversationId})
+      INSERT INTO message (sender_id, receiver_id, text, image)
+      VALUES (${senderId}, ${receiverId}, ${text}, ${image})
       RETURNING *
     `;
 
         let returned = inserted;
 
-        const receiverSocketId = userSocketMap[receiver];
+        const receiverSocketId = userSocketMap[receiverId];
         if (receiverSocketId) {
             const [updated] = await db`
         UPDATE message
-        SET message_status = 'delivered'
+        SET status = 'delivered'
         WHERE id = ${inserted.id}
         RETURNING *
       `;
+            console.log(updated);
             io.to(receiverSocketId).emit("newMessage", updated);
             returned = updated;
         }
-
+        console.log(returned);
         return { success: true, data: returned };
     } catch (e) {
-        return { success: false, message: e.message };
+        console.log(e);
+        return { success: false, error: e.message };
     }
 };

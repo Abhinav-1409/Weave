@@ -3,13 +3,14 @@ export const handleUpdateBio = async (bio, id) => {
     try {
         if (!id)
             throw new Error('User not Authenticated');
-        const result =
+        const [result] =
             await db`
                 UPDATE profile
                 SET bio = ${bio}
                 WHERE user_id = ${id};
+                RETURNING *;
             `
-        return { success: true };
+        return { success: true, data: result };
     }
     catch (e) {
         console.log(e);
