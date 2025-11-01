@@ -1,47 +1,40 @@
-// import React, { useState } from "react";
-// import Sidebar from '../components/Sidebar';
-// import ChatContainer from '../components/ChatContainer';
-// import RightSidebar from '../components/RightSidebar';
+import React, { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
-// const HomePage = () => {
-//     const [selectedUser, setSelectedUser] = useState(false);
-
-//     return (
-//         <div className="w-full h-screen bg-slate-100 p-4">
-//             <div className={`h-full rounded-2xl overflow-hidden bg-white shadow-md grid grid-cols-1 relative p-3 ${selectedUser ? 'md:grid-cols-[1fr_1.5fr_1fr] xl:grid-cols-[1fr_2fr_1fr]' : 'md:grid-cols-2'}`}>
-//                 <Sidebar selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
-//                 <ChatContainer selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
-//                 <RightSidebar selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
-//             </div>
-//         </div>
-//     )
-// }
-
-// export default HomePage;
-
-"use client"
-
-import { useState } from "react"
 import Sidebar from "../components/Sidebar"
 import ChatContainer from "../components/ChatContainer"
 import RightSidebar from "../components/RightSidebar"
-import AuthPage from './AuthPage'
-import ProfilePage from "./ProfilePage"
+
+import { useAuthStore } from "../store/auth"
+import { useChatStore } from "../store/chat"
+import { useSocketMessages } from "../hooks/useSocketMessages"
 
 const HomePage = () => {
-  const [selectedUser, setSelectedUser] = useState(false)
+  useSocketMessages();
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!isAuthenticated)
+      navigate('/auth');
+  }, [isAuthenticated, navigate])
+  const { selectedUser } = useChatStore();
+
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 md:p-4">
-      <div
-        className={`h-full rounded-2xl overflow-hidden bg-white shadow-lg border border-slate-200/50 grid grid-cols-1 relative ${selectedUser ? "md:grid-cols-[280px_1fr_320px] lg:grid-cols-[300px_1.5fr_340px]" : "md:grid-cols-[280px_1fr]"}`}
-      >
-        <Sidebar/>
-        <ChatContainer/>
-        <RightSidebar selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
+    <div className="flex h-screen overflow-hidden bg-slate-100">
+      <div className="w-80 max-md:w-full flex-shrink-0 border-r border-slate-200 bg-white flex flex-col h-full overflow-hidden">
+        <Sidebar />
       </div>
+
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <ChatContainer />
+      </div>
+
+      {selectedUser && <div className="w-80 border-l border-slate-200 bg-white flex-shrink-0 max-lg:hidden">
+        <RightSidebar />
+      </div>}
     </div>
-  )
+  );
 }
 
 export default HomePage

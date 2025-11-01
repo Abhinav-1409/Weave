@@ -1,231 +1,239 @@
-"use client"
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, Camera, Save, X } from "lucide-react";
+import { useAuthStore } from "../store/auth";
+import { getMyProfile, updateProfile, updateProfileImage } from "../graphql/gqlFunctions";
+import { uploadImage } from "../utils/uploadImage";
+import { toast } from "react-toastify";
 
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-// import { useAuth } from "../context/AuthContext"
-import { ArrowLeft, User, Save, X } from "lucide-react"
+export default function ProfilePage() {
+  const navigate = useNavigate();
+  const fileRef = useRef(null);
 
-const ProfilePage = () => {
+  // Get from store
+  const { user, profile, setProfile, logout } = useAuthStore();
 
-  const updatePP = () => {
-    // Browser
-    // const file = input.files[0]; // from <input type="file" />
-    // const contentType = file.type || 'application/octet-stream';
+  // Edit state
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-    // // 1) Get presigned URL
-    // const { url } = await fetch('/api/upload-url', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ key: `uploads/${crypto.randomUUID()}-${file.name}`, contentType }),
-    // }).then(r => r.json());
+  // Only for editing (temporary)
+  const [editBio, setEditBio] = useState("");
 
-    // // 2) PUT to S3 presigned URL
-    // const putRes = await fetch(url, {
-    //   method: 'PUT',
-    //   headers: { 'Content-Type': contentType },
-    //   body: file,
-    // });
-    // if (!putRes.ok) throw new Error('Upload failed');
-    return 0;
-  }
+  // Load profile once
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await getMyProfile();
+        const p = data?.getProfile;
+        
+        if (p) {
+          setProfile({
+            bio: p.bio || "",
+            profileImage: p.profileImage || "",
+            lastSeen: p.lastSeen || null,
+          });
+        }
+      } catch (e) {
+        console.error("Load error:", e);
+      }
+    };
+    load();
+  }, [setProfile]);
 
+  const onEdit = () => {
+    setEditBio(profile?.bio || "");
+    setIsEditing(true);
+  };
 
+  const onSave = async () => {
+    setSaving(true);
+    try {
+      await updateProfile(user?.name || "", editBio.trim());
+      
+      setProfile({
+        ...profile,
+        bio: editBio.trim(),
+      });
+      
+      setIsEditing(false);
+      toast.success("Profile updated");
+    } catch (e) {
+      toast.error("Failed to update");
+    } finally {
+      setSaving(false);
+    }
+  };
 
+  const onCancel = () => {
+    setEditBio(profile?.bio || "");
+    setIsEditing(false);
+  };
 
+  const onPickImage = () => fileRef.current?.click();
 
+  const onImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Select an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Max 5MB");
+      return;
+    }
 
+    setUploading(true);
+    try {
+      const url = await uploadImage(file, "profile");
+      await updateProfileImage(url);
+      
+      setProfile({
+        ...profile,
+        profileImage: url,
+      });
+      
+      toast.success("Profile picture updated");
+    } catch (e) {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
+  const onLogout = () => {
+    logout();
+    navigate("/auth");
+  };
 
-
-
-
-
-
-
-
-
-
-
-  // const { user, logout, updateProfile } = useAuth()
-  const navigate = useNavigate()
-  const [isEditing, setIsEditing] = useState(false)
-  // const [formData, setFormData] = useState({
-  //   name: user?.name || "",
-  //   bio: user?.bio || "",
-  //   profileImage: user?.profileImage || "",
-  // })
-  const [user, setUser] = useState({
-    name: "Abhinav",
-    bio: "Hello I'm Abhinav",
-    profileImage: "",
-  });
-  const [formData, setFormData] = useState({
-    name: "Abhinav",
-    bio: "Hello I'm Abhinav",
-    profileImage: "",
-  })
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSave = () => {
-    // updateProfile(formData)
-    setIsEditing(false)
-  }
-
-  // const handleCancel = () => {
-  //   setFormData({
-  //     name: user?.name || "",
-  //     bio: user?.bio || "",
-  //     profileImage: user?.profileImage || "",
-  //   })
-  //   setIsEditing(false)
-  // }
-
-  const handleLogout = () => {
-    // logout()
-    navigate("/auth")
-  }
-
-  if (!user) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">Please login first</p>
-          <button
-            onClick={() => navigate("/auth")}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg"
-          >
-            Go to Login
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+          <button onClick={() => navigate("/")} className="px-3 py-2 rounded hover:bg-gray-100">
+            ← Back
+          </button>
+          <h1 className="text-lg font-semibold">Profile</h1>
+          <button onClick={onLogout} className="px-3 py-2 rounded text-red-600 hover:bg-red-50">
+            Logout
           </button>
         </div>
       </div>
-    )
-  }
 
-  return (
-    <div className="w-full h-screen bg-gradient-to-br from-indigo-50 to-blue-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate("/")} className="p-2 hover:bg-white rounded-lg transition-colors">
-            <ArrowLeft className="text-slate-600" size={24} />
-          </button>
-          <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
-        </div>
-
-        {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          {/* Avatar Section */}
-          <div className="flex flex-col items-center mb-8">
-            {formData?.profileImage ? (
-              <img
-                src={formData?.profileImage || "/placeholder.svg"}
-                alt="profile"
-                className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-indigo-100"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center mb-4 border-4 border-indigo-100">
-                <User className="text-white" size={48} />
-              </div>
-            )}
-            {isEditing && (
-              <input
-                type="text"
-                name="profileImage"
-                value={formData?.profileImage}
-                onChange={handleChange}
-                placeholder="Profile image URL"
-                className="w-full max-w-xs px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm mt-4"
-              />
-            )}
-          </div>
-
-          {/* Form Fields */}
-          <div className="space-y-6">
-            {/* Name Field */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="name"
-                  value={formData?.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      {/* Content */}
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="bg-white border rounded-lg p-6">
+          {/* Avatar */}
+          <div className="flex flex-col items-center">
+            <div className="relative">
+              {profile?.profileImage ? (
+                <img
+                  src={profile.profileImage}
+                  alt={user?.name || "User"}
+                  className="w-28 h-28 rounded-full object-cover border-4 border-gray-100"
                 />
               ) : (
-                <p className="text-lg text-slate-900">{user?.name}</p>
+                <div className="w-28 h-28 rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-100">
+                  <User className="w-12 h-12 text-gray-400" />
+                </div>
               )}
+
+              <button
+                onClick={onPickImage}
+                disabled={uploading}
+                className="absolute bottom-0 right-0 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                onChange={onImageChange}
+                className="hidden"
+              />
             </div>
 
-            {/* Email Field (Read-only) */}
+            <div className="mt-4 text-center">
+              <div className="text-xl font-semibold text-slate-900">{user?.name || "—"}</div>
+              <div className="text-sm text-slate-500">{user?.email || ""}</div>
+            </div>
+          </div>
+
+          {/* Bio Section */}
+          <div className="mt-8 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-              <p className="text-lg text-slate-600 bg-slate-50 px-4 py-2 rounded-lg">{user?.email}</p>
-              <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+              <label className="block text-sm text-slate-600 mb-2">Name</label>
+              <div className="px-3 py-2 bg-slate-50 rounded">{user?.name || "—"}</div>
             </div>
 
-            {/* Bio Field */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Bio</label>
+              <label className="block text-sm text-slate-600 mb-2">Email</label>
+              <div className="px-3 py-2 bg-slate-50 rounded text-slate-500">{user?.email || "—"}</div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600 mb-2">Bio</label>
               {isEditing ? (
                 <textarea
-                  name="bio"
-                  value={formData?.bio}
-                  onChange={handleChange}
-                  rows="4"
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                  placeholder="Tell us about yourself..."
+                  rows={4}
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Write something about yourself"
                 />
               ) : (
-                <p className="text-slate-700 whitespace-pre-wrap">{user?.bio || "No bio added yet"}</p>
+                <div className="px-3 py-2 bg-slate-50 rounded min-h-[80px]">
+                  {profile?.bio || "No bio added"}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={onSave}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    onClick={onCancel}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border rounded hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={onEdit}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Edit Bio
+                </button>
               )}
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 mt-8 pt-8 border-t border-slate-200">
-            {isEditing ? (
-              <>
-                <button
-                  onClick={handleSave}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                >
-                  <Save size={20} />
-                  Save Changes
-                </button>
-                <button
-                  // onClick={handleCancel}
-                  className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-900 font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                >
-                  <X size={20} />
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                >
-                  Edit Profile
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-medium py-2 px-4 rounded-lg transition-colors"
-                >
-                  Logout
-                </button>
-              </>
-            )}
-          </div>
+          {/* Last Seen */}
+          {profile?.lastSeen && (
+            <div className="mt-6 text-xs text-slate-500">
+              Last seen: {new Date(profile.lastSeen).toLocaleString()}
+            </div>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-export default ProfilePage

@@ -1,7 +1,7 @@
 import { handleLogin, handleSignup } from "../controllers/auth.js";
 import { handleGetUserDetails, handleUpdateUserName, handleGetUserFriends, handleGetUsers } from "../controllers/user.js";
-import { handleUpdateBio, handleGetUserProfile } from '../controllers/profile.js';
-import { getUploadUrls3 } from '../utlis/s3.js';
+import { handleUpdateBio, handleGetUserProfile, handleUpdateProfileImage } from '../controllers/profile.js';
+import { deleteObject, getUploadUrls3 } from '../utlis/s3.js';
 import camelcaseKeys from 'camelcase-keys';
 import { GraphQLError } from 'graphql';
 import { getMessagesForUser, getUndeliveredMessages, sendMessage } from "../controllers/message.js";
@@ -9,7 +9,7 @@ import { userSocketMap } from "../server.js";
 
 export const resolvers = {
     Query: {
-        getUserDeatils: async (_, { id }) => {
+        getUserDetails: async (_, { id }) => {
             if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
@@ -27,7 +27,7 @@ export const resolvers = {
                     },
                 });
             }
-            return camelcaseKeys(await handleGetUsers(context.user.id), { deep: true });
+            return camelcaseKeys(await handleGetUsers(context.user.id));
         },
         getMessagesForUser: async (_, { userId }, context) => {
             if (!context.isAuthenticated) {
@@ -39,7 +39,18 @@ export const resolvers = {
             }
             const result = await getMessagesForUser(userId, context.user.id);
             return camelcaseKeys(result.data);
-        }
+        },
+        getProfile: async (_, { }, context) => {
+            if (!context.isAuthenticated) {
+                throw new GraphQLError('You are not authorized to perform this action.', {
+                    extensions: {
+                        code: 'FORBIDDEN',
+                    },
+                });
+            }
+            const result = await handleGetUserProfile(context.user.id);
+            return camelcaseKeys(result);
+        },
     },
     User: {
         profile: async (parent) => {
@@ -82,10 +93,10 @@ export const resolvers = {
                 });
             }
             if (name) {
-                handleUpdateUserName(name, context.user.id);
+                await handleUpdateUserName(name, context.user.id);
             }
             if (bio) {
-                handleUpdateBio(bio, context.user.id);
+                await handleUpdateBio(bio, context.user.id);
             }
             const profile = camelcaseKeys(await handleGetUserProfile(context.user.id));
             return profile;
@@ -119,6 +130,34 @@ export const resolvers = {
                 throw new GraphQLError(e.message, {
                     extensions: {
                         code: 'ERROR',
+                    },
+                });
+            }
+        },
+        updateProfileImage: async (_, { image }, context) => {
+            if (!context.isAuthenticated) {
+                throw new GraphQLError('You are not authorized to perform this action.', {
+                    extensions: {
+                        code: 'FORBIDDEN',
+                    },
+                });
+            }
+            try {
+                const { prevUrl, updatedProfile } = await handleUpdateProfileImage(image, context.user.id);
+                console.log('prevUrl', prevUrl);
+                const arr = prevUrl?.split('/');
+                let key;
+                if (arr.length > 0) {
+                    key = arr[arr.length - 2] + '/' + arr[arr.length - 1];
+                }
+                await deleteObject(key);
+                return updatedProfile;
+            } catch (e) {
+                console.log(e);
+                throw new GraphQLError('Failed to update profile image', {
+                    extensions: {
+                        code: 'INTERNAL_SERVER_ERROR',
+                        originalError: e.message,
                     },
                 });
             }

@@ -52,15 +52,18 @@ export const typeDefs =
         }
 
         type Query {
-            getUserDeatils (id: ID!) : User!
+            getUserDetails (id: ID!) : User!
             getUsers: [User!]
             getMessagesForUser (userId: ID!): [Message!]
+            getProfile : Profile!
         }
 
         type Mutation {
             signup (name: String!, email: String!, password: String!): AuthResponse!
             login (email: String!, password: String!): AuthResponse!
-            updateProfile (profileImage: String, bio: String, lastSeen: Date, name: String): Profile!
+            updateProfile (bio: String, name: String): Profile!
+            updateProfileImage (image: String!): Profile!
+            updateLastSeen: Boolean
             getUploadUrl (contentType: String!, path: String!): UrlResponse!
             sendMessages(receiverId: ID!, text: String, image: String): Message!
         }

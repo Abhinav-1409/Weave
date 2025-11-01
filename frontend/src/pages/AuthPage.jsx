@@ -1,20 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, User, FileText } from "lucide-react";
-import { useAuth } from "../context/AuthContext.jsx";
+import { Mail, Lock, User, EyeOff, Eye } from "lucide-react";
 import { toast } from "react-toastify";
-import { useEffect } from "react";
+import { useAuthStore } from "../store/auth";
+import { gqlLogin, gqlSignup } from "../graphql/gqlFunctions";
 
 const AuthPage = () => {
+
+  const { isAuthenticated, login } = useAuthStore();
+
   const [isLogin, setIsLogin] = useState(true)
-  const { login, signup } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    bio: "",
   });
+
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -23,48 +26,58 @@ const AuthPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }))
     setError("")
   }
-  const { isAuthenticated } = useAuth();
+
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     setLoading(true);
-    e.preventDefault()
+    e.preventDefault();
     setError("");
 
     if (isLogin) {
       if (!formData.email || !formData.password) {
         toast.warning("Please fill in all fields");
+        setLoading(false);
         return;
       }
-
-      const res = await login(formData.email, formData.password);
-      console.log(res);
-      if (res.success) {
-        navigate("/");
-      } else {
-        setError(res.message);
+      try {
+        const { data } = await gqlLogin(formData.email, formData.password)
+        if (data?.login?.success) {
+          const { user, token } = data.login;
+          login(user, token);
+        }
+        navigate('/');
+      } catch (e) {
+        console.log(e);
+        setError(e.message);
       }
     }
     else {
       if (!formData.name || !formData.email || !formData.password) {
         toast.warning("Please fill in all fields")
+        setLoading(false);
         return;
       }
       if (formData.password.length < 6) {
         toast.warning("Password must be at least 6 characters")
+        setLoading(false);
         return;
       }
-      const res = await signup(formData.name, formData.email, formData.password);
-      console.log(res);
-      if (res.success) {
-        toast.success('Login To Continue');
-        setIsLogin(true);
-      } else {
-        setError(res.message);
+      try {
+        const { data } = await gqlSignup(formData.name, formData.email, formData.password);
+        if (data?.signup?.success) {
+          toast.success(data.signup.message);
+          setIsLogin(true);
+        } else {
+          toast.error(data.signup.message);
+        }
+      } catch (e) {
+        console.log(e);
+        setError(e.message);
       }
       setLoading(false);
     }
@@ -147,33 +160,16 @@ const AuthPage = () => {
               <div className="relative">
                 <Lock className="absolute left-3 top-3 text-slate-400" size={20} />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
                   className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
+                {showPassword ? <EyeOff onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-slate-400" size={20} /> : <Eye onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-slate-400" size={20} />}
               </div>
             </div>
-
-            {/* Bio Field (Signup only) */}
-            {!isLogin && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Bio</label>
-                <div className="relative">
-                  <FileText className="absolute left-3 top-3 text-slate-400" size={20} />
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder="Tell us about yourself..."
-                    rows="3"
-                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Error Message */}
             {error && (

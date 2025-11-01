@@ -12,27 +12,51 @@ export const GET_USERS =
 export const GET_USER_WITH_UNSEEN_MESSAGES =
     gql`query getUsersAndUnseenMessages {
         getUsers {
-            email
-            name
             id
+            name
+            email
             unseenMessages {
-            media
-            sender
-            receiver
-            createdAt
+                count
+            }
+            profile {
+                lastSeen
+                profileImage
+                bio
+            }
+        }
+} `
+
+export const GET_USER_WITH_PROFILE =
+    gql`query getUserAndUnseenMessages($id: ID!) {
+        getUsers(id: $id) {
+            id
+            name
+            email
+            profile {
+                lastSeen
+                profileImage
+                bio
             }
         }
 } `
 
 export const GET_MESSAGES_FOR_SELECTED_USER =
     gql`query getMessage($userId: ID!){
-        getMessagesForUser(userId: userId){
-            sender
-            receiver
+        getMessagesForUser(userId: $userId){
+            senderId
+            receiverId
             createdAt
-            body
-            media
+            text
+            image
+            id
         }
-    }
+    }`
 
-    `
+export const GET_MY_PROFILE =
+    gql`query PROFILE{
+        getProfile{
+            lastSeen
+            profileImage
+            bio
+        }
+    }`

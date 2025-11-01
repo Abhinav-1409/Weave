@@ -7,7 +7,7 @@ export const handleUpdateBio = async (bio, id) => {
             await db`
                 UPDATE profile
                 SET bio = ${bio}
-                WHERE user_id = ${id};
+                WHERE user_id = ${id}
                 RETURNING *;
             `
         return { success: true, data: result };
@@ -46,7 +46,7 @@ export const handleUpdateLastSeen = async (id) => {
         const result =
             await db`
                 UPDATE profile
-                SET last_seen = ${Date.now()}
+                SET last_seen = NOW()
                 WHERE user_id = ${id};
             `
         return { success: true };
@@ -55,4 +55,10 @@ export const handleUpdateLastSeen = async (id) => {
         console.log(e);
         throw new Error('Some Error Occurred.');
     }
+}
+
+export const handleUpdateProfileImage = async (image, userId) => {
+    const [prevUrl] = await db`SELECT profile_image FROM profile where user_id = ${userId}`
+    const [updatedProfile] = await db`UPDATE profile SET profile_image = ${image} where user_id = ${userId} RETURNING *`;
+    return { prevUrl, updatedProfile };
 }
