@@ -45,6 +45,11 @@ export const typeDefs =
             user: User
             message: String
         }
+        type UrlResponse {
+            success: Boolean!
+            url: String
+            key: String
+        }
 
         type Query {
             getUserDeatils (id: ID!) : User!
@@ -56,7 +61,7 @@ export const typeDefs =
             signup (name: String!, email: String!, password: String!): AuthResponse!
             login (email: String!, password: String!): AuthResponse!
             updateProfile (profileImage: String, bio: String, lastSeen: Date, name: String): Profile!
-            getUploadUrl (contentType: String!, path: String!): String!
+            getUploadUrl (contentType: String!, path: String!): UrlResponse!
             sendMessages(receiverId: ID!, text: String, image: String): Message!
         }
 `

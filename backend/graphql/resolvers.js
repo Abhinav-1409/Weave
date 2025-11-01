@@ -1,7 +1,7 @@
 import { handleLogin, handleSignup } from "../controllers/auth.js";
 import { handleGetUserDetails, handleUpdateUserName, handleGetUserFriends, handleGetUsers } from "../controllers/user.js";
 import { handleUpdateBio, handleGetUserProfile } from '../controllers/profile.js';
-import { getObjectUrl, getUploadUrl } from '../utlis/s3.js';
+import { getUploadUrls3 } from '../utlis/s3.js';
 import camelcaseKeys from 'camelcase-keys';
 import { GraphQLError } from 'graphql';
 import { getMessagesForUser, getUndeliveredMessages, sendMessage } from "../controllers/message.js";
@@ -17,7 +17,7 @@ export const resolvers = {
                     },
                 });
             }
-            return camelcaseKeys(await handleGetUserDetails({ email: null, id: id }), { deep: true });
+            return camelcaseKeys(await handleGetUserDetails({ email: null, id: id }));
         },
         getUsers: async (_, args, context) => {
             if (!context.isAuthenticated) {
@@ -38,21 +38,21 @@ export const resolvers = {
                 });
             }
             const result = await getMessagesForUser(userId, context.user.id);
-            return camelcaseKeys(result.data, { deep: true });
+            return camelcaseKeys(result.data);
         }
     },
     User: {
         profile: async (parent) => {
-            return camelcaseKeys(await handleGetUserProfile(parent.id), { deep: true });
+            return camelcaseKeys(await handleGetUserProfile(parent.id));
         },
         unseenMessages: async (parent, { }, context) => {
-            const result = camelcaseKeys((await getUndeliveredMessages(parent.id, context.user.id), { deep: true }));
-            return result.data;
+            const result = camelcaseKeys((await getUndeliveredMessages(parent.id, context.user.id)));
+            return camelcaseKeys(result.data);
         }
     },
     Profile: {
         user: async (parent) => {
-            return camelcaseKeys(await handleGetUserDetails({ id: parent.userId }), { deep: true });
+            return camelcaseKeys(await handleGetUserDetails({ id: parent.userId }));
         }
     },
     Mutation: {
@@ -87,7 +87,7 @@ export const resolvers = {
             if (bio) {
                 handleUpdateBio(bio, context.user.id);
             }
-            const profile = camelcaseKeys(await handleGetUserProfile(context.user.id), { deep: true });
+            const profile = camelcaseKeys(await handleGetUserProfile(context.user.id));
             return profile;
         },
         getUploadUrl: async (_, { path, contentType }, context) => {
@@ -99,8 +99,9 @@ export const resolvers = {
                     }
                 }
             }
-            const uploadUrl = await getUploadUrl(path, context.user.id, contentType);
-            return uploadUrl.url;
+            const uploadUrl = await getUploadUrls3(path, contentType);
+            // console.log(uploadUrl);
+            return { success: true, url: uploadUrl.url, key: uploadUrl.key };
         },
         sendMessages: async (_, { receiverId, text, image }, context) => {
             if (!context.isAuthenticated) {
@@ -112,7 +113,8 @@ export const resolvers = {
             }
             try {
                 const res = await sendMessage(context.user.id, receiverId, text, image, userSocketMap);
-                return camelcaseKeys(res.data, { deep: true });
+                // console.log(camelcaseKeys(res.data));
+                return camelcaseKeys(res.data);
             } catch (e) {
                 throw new GraphQLError(e.message, {
                     extensions: {

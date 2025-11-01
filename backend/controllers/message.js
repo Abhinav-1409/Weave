@@ -1,3 +1,4 @@
+import camelcaseKeys from 'camelcase-keys';
 import db from '../db/connectDB.js';
 import { io } from '../server.js';
 
@@ -53,11 +54,11 @@ export const sendMessage = async (senderId, receiverId, text, image, userSocketM
         WHERE id = ${inserted.id}
         RETURNING *
       `;
-            console.log(updated);
-            io.to(receiverSocketId).emit("newMessage", updated);
+            // console.log(updated);
+            io.to(receiverSocketId).emit("newMessage", camelcaseKeys(updated));
             returned = updated;
         }
-        console.log(returned);
+        // console.log(returned);
         return { success: true, data: returned };
     } catch (e) {
         console.log(e);
