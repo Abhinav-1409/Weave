@@ -7,8 +7,8 @@ import { getMessagesForUser, sendMessages } from "../graphql/gqlFunctions";
 import { toast } from "react-toastify";
 
 const ChatContainer = () => {
-  const { selectedUser, setSelectedUser, messages, setMessages, addMessage } = useChatStore();
-  const { user, onlineUsers, token } = useAuthStore();
+  const { selectedUser, setSelectedUser, messages, setMessages, addMessage, darkMode } = useChatStore();
+  const { user, onlineUsers, token, profile } = useAuthStore();
 
 
   const [input, setInput] = useState("");
@@ -114,24 +114,24 @@ const ChatContainer = () => {
   // If no user selected, show empty state
   if (!selectedUser) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 text-slate-500 bg-slate-50 h-full max-md:hidden">
-        <div className="p-4 bg-slate-200 rounded-full">
-          <MessageSquareMore size={32} className="text-slate-600" />
+      <div className={`flex flex-col items-center justify-center gap-3 ${darkMode ? "bg-gray-900 text-slate-200" : "bg-slate-50 text-slate-700"} h-full max-md:hidden`}>
+        <div className={`${darkMode ? "bg-gray-800" : "bg-slate-200"} p-4 rounded-full`}>
+          <MessageSquareMore size={32} className={`${darkMode ? "text-slate-200" : "text-slate-600"}`} />
         </div>
-        <p className="text-lg font-semibold text-slate-700">Select a conversation</p>
-        <p className="text-sm text-slate-500">Choose a chat to start messaging</p>
+        <p className={`text-lg font-semibold ${darkMode ? "text-slate-100" : "text-slate-700"}`}>Select a conversation</p>
+        <p className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Choose a chat to start messaging</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className={`${darkMode ? "bg-gray-900 text-slate-200" : "bg-slate-50 text-slate-800"} flex flex-col h-full`}>
       {/* Header - Sticky */}
-      <div className="sticky top-0 z-10 flex items-center justify-between py-4 px-6 border-b border-slate-200 bg-white shadow-sm">
+      <div className={`${darkMode ? "bg-gray-800 border-gray-700 text-slate-100" : "bg-white border-slate-200 text-slate-900"} sticky top-0 z-10 flex items-center justify-between py-4 px-6 border-b shadow-sm`}>
         <div className="flex items-center gap-3">
-          {selectedUser?.profileImage ? (
+          {selectedUser?.profile?.profileImage ? (
             <img
-              src={selectedUser.profileImage}
+              src={selectedUser.profile?.profileImage}
               className="w-10 h-10 rounded-full object-cover"
               alt={selectedUser.name}
             />
@@ -141,22 +141,22 @@ const ChatContainer = () => {
             </div>
           )}
           <div>
-            <p className="text-sm font-semibold text-slate-900">{selectedUser?.name}</p>
-            <p className={`text-xs ${onlineUsers.includes(selectedUser.id) ? "text-green-600" : "text-slate-500"}`}>
+            <p className={`text-sm font-semibold ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{selectedUser?.name}</p>
+            <p className={`text-xs ${onlineUsers.includes(selectedUser.id) ? "text-green-500" : (darkMode ? "text-slate-400" : "text-slate-500")}`}>
               {onlineUsers.includes(selectedUser.id) ? "● Active now" : "Offline"}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600"
+            className={`p-2 rounded-lg transition-colors ${darkMode ? "hover:bg-gray-700 text-slate-200" : "hover:bg-slate-100 text-slate-600"}`}
             aria-label="User info"
           >
             <BadgeInfo size={20} />
           </button>
           <button
             onClick={() => setSelectedUser(null)}
-            className="max-md:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600"
+            className={`max-md:hidden p-2 rounded-lg transition-colors ${darkMode ? "hover:bg-gray-700 text-slate-200" : "hover:bg-slate-100 text-slate-600"}`}
             aria-label="Close chat"
           >
             <X size={20} />
@@ -167,11 +167,11 @@ const ChatContainer = () => {
       {/* Messages Container - FIXED: Now scrollable with manual control */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto scrollbar-hide"
+        className="flex-1 overflow-y-auto scrollbar-hide min-h-0"
       >
-        <div className="flex flex-col p-6 space-y-reverse space-y-4 min-h-full">
+        <div className="flex flex-col p-6 space-y-4">
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-400">
+            <div className={`${darkMode ? "text-slate-400" : "text-slate-400"} flex items-center justify-center h-full`}>
               <p className="text-sm">No messages yet. Start the conversation!</p>
             </div>
           ) : (
@@ -184,9 +184,9 @@ const ChatContainer = () => {
                 >
                   {/* Avatar for selected user (left) */}
                   {fromSelected && (
-                    selectedUser?.profileImage ? (
+                    selectedUser?.profile?.profileImage ? (
                       <img
-                        src={selectedUser.profileImage}
+                        src={selectedUser.profile?.profileImage}
                         alt={selectedUser.name}
                         className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                       />
@@ -203,14 +203,14 @@ const ChatContainer = () => {
                       <img
                         src={msg.image}
                         alt="attachment"
-                        className="rounded-xl shadow-md max-w-full cursor-pointer hover:opacity-90 transition-opacity"
+                        className={`rounded-xl shadow-md max-w-full cursor-pointer hover:opacity-90 transition-opacity ${darkMode ? "ring-1 ring-gray-700" : ""}`}
                         onClick={() => window.open(msg.image, '_blank')}
                       />
                     ) : (
                       <div
                         className={`px-4 py-2 rounded-2xl ${fromSelected
-                          ? "bg-white text-slate-900 rounded-bl-none shadow-sm"
-                          : "bg-indigo-600 text-white rounded-br-none"
+                          ? `${darkMode ? "bg-gray-800 text-slate-100 rounded-bl-none shadow-sm" : "bg-white text-slate-900 rounded-bl-none"}`
+                          : `${darkMode ? "bg-indigo-600 text-white rounded-br-none" : "bg-indigo-600 text-white rounded-br-none"}`
                           }`}
                       >
                         <p className="text-sm whitespace-pre-wrap break-words">{msg.text}</p>
@@ -219,7 +219,7 @@ const ChatContainer = () => {
 
                     {/* Timestamp */}
                     {msg.createdAt && (
-                      <span className="text-xs text-slate-400 mt-1 px-1">
+                      <span className={`text-xs mt-1 px-1 ${darkMode ? "text-slate-400" : "text-slate-400"}`}>
                         {formatTime(msg.createdAt)}
                       </span>
                     )}
@@ -227,9 +227,9 @@ const ChatContainer = () => {
 
                   {/* Avatar for current user (right) */}
                   {!fromSelected && (
-                    user?.profileImage ? (
+                    profile?.profileImage ? (
                       <img
-                        src={user.profileImage}
+                        src={profile.profileImage}
                         alt="You"
                         className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                       />
@@ -247,11 +247,11 @@ const ChatContainer = () => {
       </div>
 
       {/* Send Area - Sticky */}
-      <div className="sticky bottom-0 px-6 pb-6 pt-4 bg-white border-t border-slate-200">
+      <div className={`${darkMode ? "bg-gray-800 border-t border-gray-700" : "bg-white border-t border-slate-200"} sticky bottom-0 px-6 pb-6 pt-4`}>
         {imageFile && (
-          <div className="mb-2 flex items-center gap-2 bg-slate-100 rounded-lg p-2">
-            <Images size={16} className="text-indigo-600" />
-            <span className="text-sm text-slate-600 flex-1 truncate">{imageFile.name}</span>
+          <div className={`${darkMode ? "bg-gray-700" : "bg-slate-100"} mb-2 flex items-center gap-2 rounded-lg p-2`}>
+            <Images size={16} className={`${darkMode ? "text-indigo-300" : "text-indigo-600"}`} />
+            <span className={`text-sm ${darkMode ? "text-slate-200" : "text-slate-600"} flex-1 truncate`}>{imageFile.name}</span>
             <button
               onClick={() => {
                 setImageFile(null);
@@ -259,21 +259,21 @@ const ChatContainer = () => {
                   fileInputRef.current.value = "";
                 }
               }}
-              className="text-slate-500 hover:text-slate-700"
+              className={`${darkMode ? "text-slate-300 hover:text-slate-100" : "text-slate-500 hover:text-slate-700"}`}
             >
               <X size={16} />
             </button>
           </div>
         )}
 
-        <div className="flex items-center gap-3 bg-slate-100 rounded-full p-1 pl-4">
+        <div className={`flex items-center gap-3 rounded-full p-1 pl-4 ${darkMode ? "bg-gray-700" : "bg-slate-100"}`}>
           <input
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             type="text"
             value={input}
             placeholder="Type a message..."
-            className="flex-1 text-sm p-2 border-none rounded-full outline-none text-slate-800 placeholder-slate-400 bg-transparent"
+            className={`flex-1 text-sm p-2 border-none rounded-full outline-none ${darkMode ? "text-slate-200 placeholder-slate-400 bg-transparent" : "text-slate-800 placeholder-slate-400 bg-transparent"}`}
           />
           <input
             ref={fileInputRef}
@@ -285,7 +285,7 @@ const ChatContainer = () => {
           />
           <label
             htmlFor="image"
-            className="cursor-pointer text-slate-600 hover:text-indigo-600 transition-colors p-2"
+            className={`cursor-pointer p-2 transition-colors ${darkMode ? "text-slate-200 hover:text-indigo-300" : "text-slate-600 hover:text-indigo-600"}`}
           >
             <Images size={20} />
           </label>
@@ -293,8 +293,8 @@ const ChatContainer = () => {
             onClick={handleSendMessage}
             disabled={(!input.trim() && !imageFile) || sending}
             className={`p-2 rounded-full transition-colors ${input.trim() || imageFile
-              ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-              : "bg-slate-300 text-slate-500 cursor-not-allowed"
+              ? (darkMode ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-indigo-600 hover:bg-indigo-700 text-white")
+              : (darkMode ? "bg-gray-600 text-slate-300 cursor-not-allowed" : "bg-slate-300 text-slate-500 cursor-not-allowed")
               }`}
           >
             <Send size={20} />

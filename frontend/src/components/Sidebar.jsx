@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
-import { Search, User, MoreVertical, LogOut } from "lucide-react";
+import { Search, User, MoreVertical, LogOut, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth.js";
 import { getUsersAndMessages } from "../graphql/gqlFunctions.js";
@@ -10,7 +10,7 @@ const Sidebar = () => {
   const navigate = useNavigate()
 
   const { onlineUsers, token, logout } = useAuthStore();
-  const { users, setUsers, selectedUser, setSelectedUser, unseenMessages, setUnseenMessages, updateUnseenMessages } = useChatStore();
+  const { users, setUsers, selectedUser, setSelectedUser, unseenMessages, setUnseenMessages, updateUnseenMessages, darkMode, toggleTheme } = useChatStore();
 
   const getUsers = async () => {
     if (!token) return;
@@ -64,46 +64,60 @@ const Sidebar = () => {
     navigate("/auth");
   };
 
+  // dynamic styles based on darkMode
+  const rootBg = darkMode ? "bg-gray-900 border-gray-800 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-900";
+  const headerBg = darkMode ? "bg-gray-900" : "bg-slate-50";
+  const cardBg = darkMode ? "bg-gray-800" : "bg-white";
+  const searchBg = darkMode ? "bg-gray-800 text-slate-300" : "bg-slate-100 text-slate-700";
+  const dropdownBg = darkMode ? "bg-gray-800 border-gray-700 text-slate-200" : "bg-white border-slate-200 text-slate-700";
+  const userHover = darkMode ? "hover:bg-gray-800" : "hover:bg-slate-50";
+  const selectedUserClass = darkMode ? "bg-indigo-900/20 border-indigo-700" : "bg-indigo-50 border-indigo-200";
+  const unseenBadgeBorder = darkMode ? "border-gray-900" : "border-white";
 
   return (
     <div
-      className={`bg-white border-r border-slate-200 h-full flex flex-col overflow-hidden ${selectedUser ? "max-md:hidden" : ""}`}
+      className={`${rootBg} h-full flex flex-col overflow-hidden ${selectedUser ? "max-md:hidden" : ""} border-r`}
     >
       {/* Header */}
-      <div className="p-4 border-b border-slate-200">
-        {/* <div className="flex justify-between items-center mb-4">
-          <h1 className="text-xl font-bold text-slate-900">Messages</h1>
-          <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <MoreVertical size={18} className="text-slate-600" />
-          </button>
-        </div> */}
+      <div className={`p-4 border-b ${darkMode ? "border-gray-800" : "border-slate-200"} ${headerBg}`}>
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-xl font-bold text-slate-900">Messages</h1>
+          <h1 className="text-xl font-bold">{/* color inherited from root text color */}Messages</h1>
 
           {/* Menu Button */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 rounded-lg transition-colors"
             >
-              <MoreVertical size={18} className="text-slate-600" />
+              <MoreVertical size={18} className={`${darkMode ? "text-slate-300" : "text-slate-600"}`} />
             </button>
 
             {/* Dropdown Menu */}
             {showMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+              <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-50 ${dropdownBg}`}>
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     navigate("/profile");
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:opacity-90 transition-colors"
                 >
                   <User size={18} />
                   <span>Profile</span>
                 </button>
 
-                <div className="border-t border-slate-100"></div>
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    toggleTheme();
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:opacity-90 transition-colors"
+                >
+                  {darkMode ? <Sun /> : <Moon />}
+                  <span>{darkMode ? " Light Mode" : "Dark Mode"}</span>
+                </button>
+
+                <div className={`border-t ${darkMode ? "border-gray-700" : "border-slate-100"}`}></div>
 
                 <button
                   onClick={() => {
@@ -120,12 +134,12 @@ const Sidebar = () => {
           </div>
         </div>
         {/* Search */}
-        <div className="bg-slate-100 rounded-lg flex items-center gap-2 py-2 px-3">
-          <Search size={16} className="text-slate-400" />
+        <div className={`${searchBg} rounded-lg flex items-center gap-2 py-2 px-3`}>
+          <Search size={16} className={`${darkMode ? "text-slate-400" : "text-slate-400"}`} />
           <input
             onChange={(e) => setInput(e.target.value)}
             type="text"
-            className="bg-transparent border-none outline-none text-sm text-slate-700 placeholder-slate-400 flex-1"
+            className={`bg-transparent border-none outline-none text-sm placeholder-slate-400 flex-1 ${darkMode ? "text-slate-200" : "text-slate-700"}`}
             placeholder="Search..."
           />
         </div>
@@ -144,14 +158,14 @@ const Sidebar = () => {
             }}
             key={user.id || index}
             className={`flex items-center gap-3 p-3 mx-2 my-1 rounded-lg cursor-pointer transition-all ${selectedUser?.id === user.id
-              ? "bg-indigo-50 border border-indigo-200"
-              : "hover:bg-slate-50"
+              ? selectedUserClass
+              : userHover
               }`}
           >
             <div className="relative flex-shrink-0">
-              {user?.profileImage ? (
+              {user?.profile?.profileImage ? (
                 <img
-                  src={user.profileImage}
+                  src={user.profile.profileImage}
                   className="w-12 h-12 rounded-full object-cover"
                   alt={`${user.name}'s profile`}
                 />
@@ -162,19 +176,19 @@ const Sidebar = () => {
               )}
 
               {unseenMessages[user.id] > 0 && (
-                <div className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-violet-600 text-white text-xs font-bold border-2 border-white">
+                <div className={`absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-violet-600 text-white text-xs font-bold ${unseenBadgeBorder}`}>
                   {unseenMessages[user.id]}
                 </div>
               )}
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">
+              <p className={`text-sm font-medium truncate ${darkMode ? "text-slate-100" : "text-slate-900"}`}>
                 {user.name}
               </p>
               <p className={`text-xs ${onlineUsers.includes(user.id)
-                ? "text-green-600"
-                : "text-slate-400"
+                ? "text-green-400"
+                : (darkMode ? "text-slate-400" : "text-slate-500")
                 }`}>
                 {onlineUsers.includes(user.id) ? "● Online" : "Offline"}
               </p>

@@ -7,7 +7,7 @@ import { useChatStore } from "../store/chat"
 
 const RightSidebar = () => {
   const { logout, isAuthenticated, onlineUsers } = useAuthStore();
-  const { selectedUser, messages } = useChatStore();
+  const { selectedUser, messages, darkMode } = useChatStore();
   const navigate = useNavigate();
   const [images, setImages] = useState([])
 
@@ -24,7 +24,6 @@ const RightSidebar = () => {
 
   useEffect(() => {
     let images = [];
-    console.log(messages);
     messages.forEach((message) => {
       if (message.image)
         images.push(message.image);
@@ -34,9 +33,9 @@ const RightSidebar = () => {
 
   return (
     selectedUser && (
-      <div className="bg-white border-l border-slate-200 w-full relative overflow-y-auto flex flex-col max-md:hidden">
+      <div className={`${darkMode ? "bg-gray-900 text-slate-200 border-gray-800" : "bg-slate-50 text-slate-900 border-slate-200"} border-l w-full relative min-h-screen overflow-y-auto flex flex-col max-md:hidden`}>
         {/* Profile Section */}
-        <div className="pt-8 pb-6 px-6 flex flex-col items-center gap-4 border-b border-slate-200">
+        <div className={`pt-8 pb-6 px-6 flex flex-col items-center gap-4 ${darkMode ? "border-b border-gray-800" : "border-b border-slate-200"}`}>
           {selectedUser ? (
             selectedUser?.profile?.profileImage ? (
               <img
@@ -45,19 +44,19 @@ const RightSidebar = () => {
                 className="w-20 h-20 rounded-full object-cover"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white">
+              <div className={`w-20 h-20 rounded-full ${darkMode ? "bg-gray-700" : "bg-gradient-to-br from-indigo-400 to-indigo-600"} flex items-center justify-center text-white`}>
                 <User size={32} />
               </div>
             )
           ) : null}
 
           <div className="text-center">
-            <h1 className="text-lg font-semibold text-slate-900">{selectedUser?.name ?? "—"}</h1>
-            <p className={`text-s ${onlineUsers?.includes(selectedUser.id) ? 'text-green-500' : 'text-slate-500'} mt-1`}>
+            <h1 className={`${darkMode ? "text-slate-100" : "text-slate-900"} text-lg font-semibold`}>{selectedUser?.name ?? "—"}</h1>
+            <p className={`text-s mt-1 ${onlineUsers?.includes(selectedUser.id) ? 'text-green-400' : (darkMode ? 'text-slate-400' : 'text-slate-500')}`}>
               {onlineUsers?.includes(selectedUser.id) ? "● Active now" : "Offline"}
             </p>
           </div>
-          <p className="text-sm text-slate-600 text-center">{selectedUser?.profile?.bio ?? "No bio added"}</p>
+          <p className={`${darkMode ? "text-slate-400" : "text-slate-600"} text-sm text-center`}>{selectedUser?.profile?.bio ?? "No bio added"}</p>
         </div>
 
         {/* Contact Info */}
@@ -77,25 +76,30 @@ const RightSidebar = () => {
 
         {/* Media Section */}
         <div className="px-6 py-4 flex-1 overflow-y-auto">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Media</p>
+          <p className={`text-xs font-semibold ${darkMode ? "text-slate-300" : "text-slate-500"} uppercase tracking-wide mb-3`}>Media</p>
           <div className="grid grid-cols-2 gap-3">
             {images.map((url, index) => (
               <div
                 key={index}
                 onClick={() => window.open(url)}
-                className="cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
+                className={`cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-opacity ${darkMode ? "ring-1 ring-gray-800" : ""}`}
               >
                 <img src={`${url}?w=400&auto=format`} alt="" className="w-full h-24 object-cover" />
               </div>
             ))}
+            {images.length === 0 && (
+              <div className={`col-span-2 py-6 text-center ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                No media yet
+              </div>
+            )}
           </div>
         </div>
 
         {/* Logout Button */}
-        <div className="px-6 py-4 border-t border-slate-200">
+        <div className={`px-6 py-4 ${darkMode ? "border-t border-gray-800" : "border-t border-slate-200"}`}>
           <button
             onClick={handleLogout}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            className={`w-full ${darkMode ? "bg-gradient-to-r from-indigo-700 to-indigo-500 hover:from-indigo-600 hover:to-indigo-400" : "bg-indigo-600 hover:bg-indigo-700"} text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors`}
           >
             <LogOut size={16} /> Logout
           </button>

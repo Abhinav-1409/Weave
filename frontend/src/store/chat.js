@@ -52,6 +52,7 @@ export const useChatStore = create(
             partialize: (state) => ({
                 selectedUser: state.selectedUser,
                 darkMode: state.darkMode,
+                users: state.users
             }),
         }
     )
