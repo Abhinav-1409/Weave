@@ -9,19 +9,19 @@ import { typeDefs } from './graphql/typedef.js';
 import { resolvers } from './graphql/resolvers.js';
 
 const PORT = process.env.PORT || 8000;
-const loggingPlugin = {
-    async requestDidStart(requestContext) {
-        const { request } = requestContext;
-        console.log('📤 GQL Server Request:', { operationName: request.operationName, query: request.query, variables: request.variables });
-        const start = Date.now();
-        return {
-            async willSendResponse(ctx) {
-                const ms = Date.now() - start;
-                console.log('📥 GQL Server Response:', { tookMs: ms, errors: ctx.response.body?.kind === 'single' ? ctx.response.body.singleResult.errors : undefined });
-            },
-        };
-    },
-};
+// const loggingPlugin = {
+//     async requestDidStart(requestContext) {
+//         const { request } = requestContext;
+//         console.log('📤 GQL Server Request:', { operationName: request.operationName, query: request.query, variables: request.variables });
+//         const start = Date.now();
+//         return {
+//             async willSendResponse(ctx) {
+//                 const ms = Date.now() - start;
+//                 console.log('📥 GQL Server Response:', { tookMs: ms, errors: ctx.response.body?.kind === 'single' ? ctx.response.body.singleResult.errors : undefined });
+//             },
+//         };
+//     },
+// };
 
 
 import { ApolloServer } from '@apollo/server';
@@ -35,10 +35,15 @@ const httpServer = createServer(app);
 app.use(cors({
     origin: 'https://weavee.pages.dev',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 export const io = new Server(httpServer, {
-    cors: { origin: "*" }
+    cors: {
+        origin: 'https://weavee.pages.dev',
+        credentials: true
+    }
 });
 
 export const userSocketMap = {}; // {userId: socketId }
@@ -65,8 +70,7 @@ app.use(express.json());
 
 const server = new ApolloServer({
     typeDefs,
-    resolvers,
-    plugins: [loggingPlugin]
+    resolvers
 });
 
 const startServer = async () => {
