@@ -30,19 +30,6 @@ export const getUsersAndMessages = async () => {
     return res;
 }
 
-export const getUserAndProfile = async (id) => {
-    const token = useAuthStore.getState().token;
-    const res = await client.query({
-        query: GET_USER_WITH_PROFILE, context: {
-            variables: { id: id },
-            headers: {
-                authorization: `Bearer ${token}`
-            }
-        }
-    });
-    return res;
-}
-
 export const getMessagesForUser = async () => {
     const selectedUser = useChatStore.getState().selectedUser;
     if (!selectedUser?.id)

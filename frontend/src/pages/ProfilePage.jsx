@@ -29,7 +29,7 @@ export default function ProfilePage() {
       try {
         const { data } = await getMyProfile();
         const p = data?.getProfile;
-        
+
         if (p) {
           setProfile({
             bio: p.bio || "",
@@ -53,12 +53,12 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       await updateProfile(user?.name || "", editBio.trim());
-      
+
       setProfile({
         ...profile,
         bio: editBio.trim(),
       });
-      
+
       setIsEditing(false);
       toast.success("Profile updated");
     } catch (e) {
@@ -90,17 +90,14 @@ export default function ProfilePage() {
     setUploading(true);
     try {
       const url = await uploadImage(file, "profile");
-      await updateProfileImage(url);
-      
-      setProfile({
-        ...profile,
-        profileImage: url,
-      });
-      
+      const updatedProfile = await updateProfileImage(url);
+
+      setProfile(updatedProfile);
+
       toast.success("Profile picture updated");
     } catch (e) {
       // toast.error("Upload failed");
-      console.log(e);
+      console.log(e, e.message);
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";

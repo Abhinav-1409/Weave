@@ -29,12 +29,11 @@ import { expressMiddleware } from '@as-integrations/express5';
 import { authContext } from './middlewares/auth.js';
 
 import { initDB } from './db/schema.js';
-import { handleUpdateLastSeen } from './controllers/profile.js';
 
 const app = express();
 const httpServer = createServer(app);
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'https://weavee.pages.dev',
     credentials: true,
 }));
 

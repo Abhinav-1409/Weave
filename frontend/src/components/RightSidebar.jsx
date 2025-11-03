@@ -10,6 +10,21 @@ const RightSidebar = () => {
   const { selectedUser, messages, darkMode } = useChatStore();
   const navigate = useNavigate();
   const [images, setImages] = useState([])
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+
+    return date.toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+  // Output: "03/11/2025, 04:30 PM"
+
 
   const handleLogout = () => {
     logout()
@@ -53,7 +68,10 @@ const RightSidebar = () => {
           <div className="text-center">
             <h1 className={`${darkMode ? "text-slate-100" : "text-slate-900"} text-lg font-semibold`}>{selectedUser?.name ?? "—"}</h1>
             <p className={`text-s mt-1 ${onlineUsers?.includes(selectedUser.id) ? 'text-green-400' : (darkMode ? 'text-slate-400' : 'text-slate-500')}`}>
-              {onlineUsers?.includes(selectedUser.id) ? "● Active now" : "Offline"}
+              {onlineUsers?.includes(selectedUser.id) ? "● Active now" : `Offline`}
+            </p>
+            <p>
+              {onlineUsers?.includes(selectedUser.id) ? "" : `last seen ${selectedUser.profile?.lastSeen ? formatTime(selectedUser.profile.lastSeen) : ""}`}
             </p>
           </div>
           <p className={`${darkMode ? "text-slate-400" : "text-slate-600"} text-sm text-center`}>{selectedUser?.profile?.bio ?? "No bio added"}</p>

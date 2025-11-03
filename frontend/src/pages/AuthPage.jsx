@@ -94,7 +94,7 @@ const AuthPage = () => {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-indigo-900 mb-2">ChatApp</h1>
+          <h1 className="text-4xl font-bold text-indigo-900 mb-2">Weave - ChatApp</h1>
           <p className="text-slate-600">{isLogin ? "Welcome back" : "Join our community"}</p>
         </div>
 

@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '../store/auth';
 import { useChatStore } from '../store/chat';
+import { getUsersAndMessages } from '../graphql/gqlFunctions';
 
 export function useSocketMessages() {
-    const { socket, isAuthenticated } = useAuthStore();
-    const { selectedUser, addMessage, setUnseenMessages } = useChatStore();
+    const { socket, isAuthenticated, token } = useAuthStore();
+    const { selectedUser, addMessage, setUnseenMessages, setUsers } = useChatStore();
 
     useEffect(() => {
         if (!socket || !isAuthenticated) return;
@@ -25,8 +26,31 @@ export function useSocketMessages() {
                 useChatStore.getState().updateMessage(fakeId, message);
             }
         }
+        const refreshUsers = () => {
+            console.log("Update users");
+            const getUsers = async () => {
+                if (!token) return;
+                try {
+                    const { data } = await getUsersAndMessages();
+                    console.log("getUsers response", data);
+
+                    const usersArr = data?.getUsers || [];
+                    const unseen = {};
+
+                    for (let um of usersArr) {
+                        unseen[um.id] = um.unseenMessages?.[0]?.count ?? 0;
+                    }
+                    setUsers(usersArr);
+                    setUnseenMessages(unseen);
+                } catch (e) {
+                    if (e?.name === "AbortError") return;
+                }
+            }
+            getUsers();
+        }
         socket.on("newMessage", newHandler);
         socket.on("updateMessage", updateHandler);
+        socket.on("refreshUsers", refreshUsers);
         return () => {
             socket.off("newMessage");
         };
