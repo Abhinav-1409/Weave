@@ -38,27 +38,35 @@ export const sendMessage = async (senderId, receiverId, text, image, userSocketM
     if (!senderId || !receiverId) return { success: false, message: "Users undefined" };
 
     try {
-        const [inserted] = await db`
-      INSERT INTO message (sender_id, receiver_id, text, image)
-      VALUES (${senderId}, ${receiverId}, ${text}, ${image})
-      RETURNING *
-    `;
+        const fakeId = `temp-${Date.now()}`;
+        const fakeMessage = {
+            id: fakeId,
+            senderId: senderId,
+            receiverId: receiverId,
+            text: text,
+            image: image,
+            createdAt: Date.now()
+        };
+        io.to(userSocketMap[receiverId]).emit("newMessage", camelcaseKeys(fakeMessage));
 
+        const [inserted] = await db`
+            INSERT INTO message (sender_id, receiver_id, text, image)
+            VALUES (${senderId}, ${receiverId}, ${text}, ${image})
+            RETURNING *
+            `;
         let returned = inserted;
 
         const receiverSocketId = userSocketMap[receiverId];
         if (receiverSocketId) {
             const [updated] = await db`
-        UPDATE message
-        SET status = 'delivered'
-        WHERE id = ${inserted.id}
-        RETURNING *
-      `;
-            // console.log(updated);
-            io.to(receiverSocketId).emit("newMessage", camelcaseKeys(updated));
+            UPDATE message
+            SET status = 'delivered'
+            WHERE id = ${inserted.id}
+            RETURNING *
+            `;
+            io.to(receiverSocketId).emit("updateMessage", { fakeId, message: camelcaseKeys(returned) });
             returned = updated;
         }
-        // console.log(returned);
         return { success: true, data: returned };
     } catch (e) {
         console.log(e);

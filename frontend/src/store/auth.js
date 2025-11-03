@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { connectSocket } from '../utils/socket';
+import { useChatStore } from './chat';
 
 const authStore = (set, get) => ({
     user: null,
@@ -26,13 +27,14 @@ const authStore = (set, get) => ({
         if (socket?.connected) {
             socket.disconnect();
         }
+        useChatStore.getState().setSelectedUser(null);
         set({
             user: null,
             token: null,
             profile: null,
             isAuthenticated: false,
             socket: null,
-            onlineUsers: []
+            onlineUsers: [],
         });
         localStorage.clear();
     }

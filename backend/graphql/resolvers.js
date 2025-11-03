@@ -13,7 +13,7 @@ export const resolvers = {
             if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
-                        code: 'FORBIDDEN',
+                        code: 'UNAUTHENTICATED',
                     },
                 });
             }
@@ -23,7 +23,7 @@ export const resolvers = {
             if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
-                        code: 'FORBIDDEN',
+                        code: 'UNAUTHENTICATED',
                     },
                 });
             }
@@ -33,7 +33,7 @@ export const resolvers = {
             if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
-                        code: 'FORBIDDEN',
+                        code: 'UNAUTHENTICATED',
                     },
                 });
             }
@@ -44,7 +44,7 @@ export const resolvers = {
             if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
-                        code: 'FORBIDDEN',
+                        code: 'UNAUTHENTICATED',
                     },
                 });
             }
@@ -88,7 +88,7 @@ export const resolvers = {
             if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
-                        code: 'FORBIDDEN',
+                        code: 'UNAUTHENTICATED',
                     },
                 });
             }
@@ -106,7 +106,7 @@ export const resolvers = {
                 throw new GraphQLError("You are not authorized to perform this acction."),
                 {
                     extensions: {
-                        code: 'FORBIDDEN',
+                        code: 'UNAUTHENTICATED',
                     }
                 }
             }
@@ -118,7 +118,7 @@ export const resolvers = {
             if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
-                        code: 'FORBIDDEN',
+                        code: 'UNAUTHENTICATED',
                     },
                 });
             }
@@ -138,7 +138,7 @@ export const resolvers = {
             if (!context.isAuthenticated) {
                 throw new GraphQLError('You are not authorized to perform this action.', {
                     extensions: {
-                        code: 'FORBIDDEN',
+                        code: 'UNAUTHENTICATED',
                     },
                 });
             }

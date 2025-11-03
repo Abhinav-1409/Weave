@@ -6,6 +6,7 @@ const chatStore = (set) => ({
     users: [],
     selectedUser: null,
     unseenMessages: {},
+    darkMode: false,
 
     addMessage: (message) => set((state) => ({
         messages: [...state.messages, message]
@@ -31,6 +32,9 @@ const chatStore = (set) => ({
             [message.senderId]: (state.unseenMessages[message.senderId] || 0) + 1
         }
     })),
+    toggleTheme: () => set((state) => ({
+        darkMode: !state.darkMode
+    })),
     updateUnseenMessages: (userId) => set((state) => ({
         unseenMessages: {
             ...state.unseenMessages,
@@ -47,6 +51,7 @@ export const useChatStore = create(
             storage: createJSONStorage(() => localStorage),
             partialize: (state) => ({
                 selectedUser: state.selectedUser,
+                darkMode: state.darkMode,
             }),
         }
     )

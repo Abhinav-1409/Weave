@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 const ChatContainer = () => {
   const { selectedUser, setSelectedUser, messages, setMessages, addMessage } = useChatStore();
   const { user, onlineUsers, token } = useAuthStore();
-  
+
 
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -48,6 +48,8 @@ const ChatContainer = () => {
     setSending(true);
     if (!input.trim() && !imageFile) return;
     if (!token || !selectedUser) return;
+    const message = input;
+    setInput("");
     let fakeMessage;
     try {
       let imageUrl = '';
@@ -59,18 +61,17 @@ const ChatContainer = () => {
         id: `temp-${Date.now()}`,
         senderId: user.id,
         receiverId: selectedUser.id,
-        text: input,
+        text: message,
         image: imageUrl,
         createdAt: Date.now()
       };
       addMessage(fakeMessage);
 
-      const { data } = await sendMessages(input, imageUrl);
+      const { data } = await sendMessages(message, imageUrl);
       const serverMessage = data?.sendMessages;
       if (serverMessage) {
         useChatStore.getState().updateMessage(fakeMessage.id, serverMessage);
       }
-      setInput("");
       setImageFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";

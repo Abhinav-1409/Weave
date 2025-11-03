@@ -9,7 +9,7 @@ export function useSocketMessages() {
     useEffect(() => {
         if (!socket || !isAuthenticated) return;
 
-        const handler = (newMessage) => {
+        const newHandler = (newMessage) => {
             console.log("💬 New message:", newMessage);
 
             if (selectedUser && newMessage.senderId === selectedUser.id) {
@@ -19,8 +19,14 @@ export function useSocketMessages() {
                 setUnseenMessages(newMessage);
             }
         };
-        socket.on("newMessage", handler);
-
+        const updateHandler = ({ fakeId, message }) => {
+            console.log("💬 Update message:", message);
+            if (message) {
+                useChatStore.getState().updateMessage(fakeId, message);
+            }
+        }
+        socket.on("newMessage", newHandler);
+        socket.on("updateMessage", updateHandler);
         return () => {
             socket.off("newMessage");
         };
