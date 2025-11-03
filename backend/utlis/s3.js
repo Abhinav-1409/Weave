@@ -9,7 +9,6 @@ const s3Client = new S3Client({
 });
 
 const bucketName = `weave-chatapp`;
-const cloudUrl = process.env.CLOUDFRONT_URL;
 
 export const getUploadUrls3 = async (path, contentType) => {
     const key = `${path}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.jpg`;

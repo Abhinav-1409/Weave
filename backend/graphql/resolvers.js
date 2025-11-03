@@ -5,7 +5,7 @@ import { deleteObject, getUploadUrls3 } from '../utlis/s3.js';
 import camelcaseKeys from 'camelcase-keys';
 import { GraphQLError } from 'graphql';
 import { getMessagesForUser, getUndeliveredMessages, sendMessage } from "../controllers/message.js";
-import { userSocketMap } from "../server.js";
+import { io, userSocketMap } from "../server.js";
 
 export const resolvers = {
     Query: {
@@ -78,6 +78,7 @@ export const resolvers = {
         signup: async (_, { name, email, password }) => {
             try {
                 const result = await handleSignup(name, email, password);
+                io.emit("refreshUsers");
                 return { success: true, message: "Account Created Successfully." };
             } catch (e) {
                 console.log(e);
@@ -143,15 +144,15 @@ export const resolvers = {
                 });
             }
             try {
-                const { prevUrl, updatedProfile } = await handleUpdateProfileImage(image, context.user.id);
-                console.log('prevUrl', prevUrl);
-                const arr = prevUrl?.split('/');
+                const { prev, updatedProfile } = await handleUpdateProfileImage(image, context.user.id);
+                // console.log('prevUrl', prev);
+                const arr = prev?.split('/');
                 let key;
                 if (arr.length > 0) {
                     key = arr[arr.length - 2] + '/' + arr[arr.length - 1];
                 }
                 await deleteObject(key);
-                return updatedProfile;
+                return camelcaseKeys(updatedProfile);
             } catch (e) {
                 console.log(e);
                 throw new GraphQLError('Failed to update profile image', {

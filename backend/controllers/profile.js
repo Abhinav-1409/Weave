@@ -60,5 +60,7 @@ export const handleUpdateLastSeen = async (id) => {
 export const handleUpdateProfileImage = async (image, userId) => {
     const [prevUrl] = await db`SELECT profile_image FROM profile where user_id = ${userId}`
     const [updatedProfile] = await db`UPDATE profile SET profile_image = ${image} where user_id = ${userId} RETURNING *`;
-    return { prevUrl, updatedProfile };
+    // console.log(prevUrl, typeof prevUrl, prevUrl.profile_image, prevUrl[0]);
+    const prev = prevUrl.profile_image;
+    return { prev, updatedProfile };
 }
