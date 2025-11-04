@@ -114,7 +114,7 @@ const ChatContainer = () => {
   // If no user selected, show empty state
   if (!selectedUser) {
     return (
-      <div className={`flex flex-col items-center justify-center gap-3 ${darkMode ? "bg-gray-900 text-slate-200" : "bg-slate-50 text-slate-700"} h-full max-md:hidden`}>
+      <div className={`flex flex-col items-center justify-center gap-3 ${darkMode ? "bg-gray-900 text-slate-200" : "bg-slate-50 text-slate-700"} h-full md:max-md:hidden`}>
         <div className={`${darkMode ? "bg-gray-800" : "bg-slate-200"} p-4 rounded-full`}>
           <MessageSquareMore size={32} className={`${darkMode ? "text-slate-200" : "text-slate-600"}`} />
         </div>
@@ -125,9 +125,17 @@ const ChatContainer = () => {
   }
 
   return (
-    <div className={`${darkMode ? "bg-gray-900 text-slate-200" : "bg-slate-50 text-slate-800"} flex flex-col h-full`}>
+    <div className={`${darkMode ? "bg-gray-900 text-slate-200" : "bg-slate-50 text-slate-800"} flex flex-col h-full w-full`}>
       {/* Header - Sticky */}
       <div className={`${darkMode ? "bg-gray-800 border-gray-700 text-slate-100" : "bg-white border-slate-200 text-slate-900"} sticky top-0 z-10 flex items-center justify-between py-4 px-6 border-b shadow-sm`}>
+        {/* Add back button for mobile */}
+        <button
+          onClick={() => setSelectedUser(null)}
+          className={`md:hidden p-2 rounded-lg transition-colors ${darkMode ? "hover:bg-gray-700 text-slate-200" : "hover:bg-slate-100 text-slate-600"}`}
+        >
+          <X size={20} />
+        </button>
+        
         <div className="flex items-center gap-3">
           {selectedUser?.profile?.profileImage ? (
             <img
@@ -164,10 +172,10 @@ const ChatContainer = () => {
         </div>
       </div>
 
-      {/* Messages Container - FIXED: Now scrollable with manual control */}
+      {/* Messages Container */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto scrollbar-hide min-h-0"
+        className="flex-1 overflow-y-auto scrollbar-hide min-h-0 w-full"
       >
         <div className="flex flex-col p-6 space-y-4">
           {messages.length === 0 ? (
@@ -246,8 +254,8 @@ const ChatContainer = () => {
         </div>
       </div>
 
-      {/* Send Area - Sticky */}
-      <div className={`${darkMode ? "bg-gray-800 border-t border-gray-700" : "bg-white border-t border-slate-200"} sticky bottom-0 px-6 pb-6 pt-4`}>
+      {/* Send Area */}
+      <div className={`${darkMode ? "bg-gray-800 border-t border-gray-700" : "bg-white border-t border-slate-200"} sticky bottom-0 px-4 md:px-6 pb-4 pt-4 w-full`}>
         {imageFile && (
           <div className={`${darkMode ? "bg-gray-700" : "bg-slate-100"} mb-2 flex items-center gap-2 rounded-lg p-2`}>
             <Images size={16} className={`${darkMode ? "text-indigo-300" : "text-indigo-600"}`} />

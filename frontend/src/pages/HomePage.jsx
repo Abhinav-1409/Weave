@@ -17,22 +17,27 @@ const HomePage = () => {
     if (!isAuthenticated)
       navigate('/auth');
   }, [isAuthenticated, navigate])
-  const { selectedUser } = useChatStore();
+  const { selectedUser, darkMode } = useChatStore();
 
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
-      <div className="w-80 max-md:w-full flex-shrink-0 border-r border-slate-200 bg-white flex flex-col h-full overflow-hidden">
+    <div className={`${darkMode ? "bg-gray-900" : "bg-slate-100"} w-full h-screen flex overflow-hidden`}>
+      {/* Sidebar */}
+      <div className={`${selectedUser ? "max-md:hidden" : ""} w-full md:w-80 flex-shrink-0`}>
         <Sidebar />
       </div>
 
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {/* Chat Container */}
+      <div className={`${!selectedUser ? "max-md:hidden" : ""} flex-1 flex flex-col h-full`}>
         <ChatContainer />
       </div>
 
-      {selectedUser && <div className="w-80 border-l border-slate-200 bg-white flex-shrink-0 max-lg:hidden">
-        <RightSidebar />
-      </div>}
+      {/* Right Sidebar - Always hidden on mobile */}
+      {selectedUser && (
+        <div className="hidden md:block w-80">
+          <RightSidebar />
+        </div>
+      )}
     </div>
   );
 }
