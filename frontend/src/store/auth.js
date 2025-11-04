@@ -28,6 +28,7 @@ const authStore = (set, get) => ({
             socket.disconnect();
         }
         useChatStore.getState().setSelectedUser(null);
+        useChatStore.getState().setUsers([]);
         set({
             user: null,
             token: null,
